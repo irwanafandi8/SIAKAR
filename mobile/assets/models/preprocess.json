@@ -1,0 +1,11 @@
+{
+  "input_size": 112,
+  "oval_center_x_ratio": 0.5,
+  "oval_center_y_ratio": 0.5,
+  "oval_width_ratio": 0.70,
+  "oval_height_ratio": 0.85,
+  "channel_order": "RGB",
+  "normalization_mean": 127.5,
+  "normalization_std": 127.5,
+  "interpolation": "bilinear"
+}
