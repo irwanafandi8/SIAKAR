@@ -4,8 +4,14 @@
   "oval_center_y_ratio": 0.5,
   "oval_width_ratio": 0.70,
   "oval_height_ratio": 0.85,
+  "crop_box_rounding": "floor",
   "channel_order": "RGB",
+  "interpolation": "bilinear",
+  "coordinate_transformation_mode": "half_pixel",
+  "border_mode": "clamp_to_edge",
+  "anti_aliasing": false,
+  "uint8_rounding": "floor_half_up",
   "normalization_mean": 127.5,
   "normalization_std": 127.5,
-  "interpolation": "bilinear"
+  "output_dtype": "float32"
 }

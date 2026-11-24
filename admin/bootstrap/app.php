@@ -13,8 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectGuestsTo(fn () => route('admin.login'));
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
+            'device.bound' => \App\Http\Middleware\EnsureDeviceBound::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -24,6 +26,16 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (\App\Exceptions\DomainException $e) {
             return $e->render();
+        });
+
+        $exceptions->render(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return \App\Support\ApiResponse::error(
+                    'Terlalu banyak percobaan. Silakan coba beberapa saat lagi.',
+                    'TOO_MANY_ATTEMPTS',
+                    429
+                );
+            }
         });
 
         $exceptions->render(function (\Illuminate\Validation\ValidationException $e, Request $request) {

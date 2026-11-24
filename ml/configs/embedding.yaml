@@ -1,11 +1,14 @@
-# Hyperparameter model embedding CNN SIAKAR
-# Semua nilai adalah PLACEHOLDER — sesuaikan setelah uji waktu epoch
+# Hyperparameter model embedding CNN SIAKAR (sesuai DECISIONS.md D-46 & ML_SPEC.md §3.1)
 
 model:
-  input_size: 112          # piksel; boleh diturunkan ke 96 atau 64 bila CPU terlalu lambat
-  embedding_dim: 128
+  input_size: 112          # wajib selaras dengan artifacts/preprocess.json
+  embedding_dim: 128       # kontrak ekspor TFLite: [1, 128] L2-normalized (ablasi boleh 64)
+  head_type: softmax       # 'softmax' atau 'cosface' (untuk ablasi T-203)
+  cosface_scale: 30.0
+  cosface_margin: 0.20
   stages:
     - filters: 32
+      num_blocks: 1
       stride: 2
     - filters: 64
       num_blocks: 2
@@ -18,22 +21,42 @@ model:
       stride: 2
 
 data:
-  n_identities: 500        # mulai kecil; naikkan setelah uji waktu epoch
-  train_ratio: 0.7         # rasio identitas latih (kelompok A)
-  val_ratio: 0.15          # rasio identitas validasi (kelompok B)
-  test_ratio: 0.15         # rasio identitas uji (kelompok C)
+  raw_dir: data/raw/digiface
+  splits_dir: data/splits
+  n_identities: 500        # Kelompok A=350, B=75, C=75
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  n_accessory_sets: 4
+  heldout_accessory_idx: 3
+  n_val_pairs: 2000
+  n_test_pairs: 2000
   seed: 42
 
 training:
+  run_name: main_cnn
   batch_size: 32
-  epochs: 50
+  epochs: 30
+  use_augmentation: true
   learning_rate: 0.001
+  min_learning_rate: 0.000001
   optimizer: adam
-  loss: softmax_crossentropy
-  early_stopping_patience: 10
-  reduce_lr_patience: 5
+  early_stopping_patience: 8
+  reduce_lr_patience: 4
   reduce_lr_factor: 0.5
   checkpoint_dir: artifacts/checkpoints/embedding
+  training_model_path: artifacts/embedding_training.keras
+  backbone_model_path: artifacts/embedding_backbone.keras
+
+export:
+  tflite_path: artifacts/siakar_embedding.tflite
+  threshold_path: artifacts/threshold.json
+  golden_dir: artifacts/golden
+  n_golden_samples: 5
+  min_parity_cosine: 0.999
+  mobile_models_dir: ../mobile/assets/models
+  mobile_golden_dir: ../mobile/test/golden
 
 preprocess_config: artifacts/preprocess.json
-split_output: data/splits/embedding_split.json
+split_output: data/splits/split.json
+reports_dir: reports

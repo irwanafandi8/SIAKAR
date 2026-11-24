@@ -1,21 +1,42 @@
-# Hyperparameter detektor wajah CNN SIAKAR (prioritas 2)
-# PLACEHOLDER — isi setelah embedding berjalan end-to-end
+# Hyperparameter Detektor Wajah SIAKAR (ML7 / T-108, T-205 — sesuai ML_SPEC.md §3.3)
+# Kontrak Input : float32 [1, 64, 64, 3] RGB dalam [-1, 1] (area oval panduan)
+# Kontrak Output: float32 [1, 5] dalam [0, 1] -> [face_score, cx, cy, w, h]
 
 model:
-  input_size: 64           # piksel; wajah/bukan-wajah crop area oval
-  num_classes: 2           # wajah vs. bukan-wajah
+  input_size: 64
   filters: [32, 64, 128]
+  dense_units: 64
+  include_bbox: true
+  bbox_loss_weight: 2.0
 
 data:
-  positive_dir: data/raw/digiface   # crop wajah (DigiFace, digeser/diskalakan acak)
-  negative_dir: data/negatives      # gambar non-wajah (sumber OPEN — D-44 OPEN)
-  seed: 42
+  positive_dir: data/raw/digiface     # citra wajah sintetis DigiFace-1M (digeser & diskalakan di area oval)
+  negative_dir: data/negatives        # citra non-wajah sintetis / tekstur latar (tanpa wajah manusia)
+  max_positives: 4000
+  n_synthetic_negatives: 4000
+  val_ratio: 0.15
+  test_ratio: 0.15
   batch_size: 32
+  seed: 42
 
 training:
-  epochs: 30
+  epochs: 25
   learning_rate: 0.001
+  min_learning_rate: 0.000001
+  early_stopping_patience: 6
+  reduce_lr_patience: 3
+  reduce_lr_factor: 0.5
   checkpoint_dir: artifacts/checkpoints/detector
+  model_path: artifacts/detector.keras
+
+export:
+  tflite_path: artifacts/detector.tflite
+  threshold_path: artifacts/detector_threshold.json
+  golden_dir: artifacts/golden_detector
+  n_golden_samples: 4
+  mobile_models_dir: ../mobile/assets/models
+  mobile_golden_dir: ../mobile/test/golden_detector
 
 preprocess_config: artifacts/preprocess.json
-threshold: 0.5             # awal; akan disesuaikan dari validasi
+reports_dir: reports
+threshold: 0.50                       # nilai awal; diperbarui otomatis dari F1 optimal validasi

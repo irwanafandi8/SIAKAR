@@ -117,17 +117,17 @@ HOG atau LBP-histogram dari gambar yang sama (grayscale, ukuran sama) → vektor
 
 ## 4. Kontrak Praproses (satu spesifikasi, dua implementasi)
 
-Praproses **harus identik** di Python (pelatihan/evaluasi/ekspor) dan Dart (aplikasi). Implementasi referensi: `ml/src/siakar_ml/preprocess.py`. Bila ada perbedaan, Python menang.
+Praproses **harus identik secara numerik** di Python (`ml/src/siakar_ml/preprocess.py` & pipeline `tf.data`) dan Dart (`mobile/lib/core/ml/preprocess.dart`). Mengikuti revisi keputusan **`DECISIONS.md` D-32**:
 
-| Langkah | Spesifikasi |
+| Langkah | Spesifikasi Eksak |
 |---|---|
-| 1. Crop | Area dalam oval panduan (rasio dan posisi didefinisikan di `preprocess.json`, satu sumber untuk Python dan Dart) |
-| 2. Resize | Ke `input_size × input_size` (default 112), interpolasi **bilinear**, tanpa mempertahankan rasio (crop sudah persegi) |
-| 3. Urutan kanal | **RGB** |
-| 4. Tipe/rentang | Piksel uint8 → float32 → `(x − 127.5) / 127.5` → rentang [−1, 1] |
-| 5. Bentuk | `[1, H, W, 3]` (NHWC) |
+| 1. Crop oval | Dari citra masukan `RGB uint8 [H, W, 3]`: hitung `cx = oval_center_x_ratio * W`, `cy = oval_center_y_ratio * H`, `half_w = oval_width_ratio * W / 2`, `half_h = oval_height_ratio * H / 2`. Indeks batas kotak memakai **`floor`**: `x1 = max(0, floor(cx - half_w))`, `y1 = max(0, floor(cy - half_h))`, `x2 = min(W, floor(cx + half_w))`, `y2 = min(H, floor(cy + half_h))`, dengan lebar `max(1, x2 - x1)` dan tinggi `max(1, y2 - y1)`. |
+| 2. Resize bilinear murni | Ubah ukuran potongan `[in_h, in_w, 3]` ke `[S, S, 3]` (`S = input_size`, default `112`) menggunakan **interpolasi bilinear 2D murni** (**`anti_aliasing = false`**, **tanpa** filter Gaussian pra-penghalusan, **tanpa** *reflect padding*):<br>• **Pemetaan koordinat (`half_pixel`)**: untuk tiap indeks keluaran `out_y, out_x ∈ {0 .. S-1}`, hitung `src_y = (out_y + 0.5) * (in_h / S) - 0.5` dan `src_x = (out_x + 0.5) * (in_w / S) - 0.5`.<br>• **Batas tepi (`clamp_to_edge`)**: `sy = clamp(src_y, 0.0, in_h - 1.0)`, `sx = clamp(src_x, 0.0, in_w - 1.0)`.<br>• **Bobot tetangga**: `y0 = floor(sy)`, `y1 = min(y0 + 1, in_h - 1)`, `wy = sy - y0`; `x0 = floor(sx)`, `x1 = min(x0 + 1, in_w - 1)`, `wx = sx - x0`.<br>• **Nilai interpolasi per kanal**: `v = (1 - wy)*(1 - wx)*I[y0,x0] + (1 - wy)*wx*I[y0,x1] + wy*(1 - wx)*I[y1,x0] + wy*wx*I[y1,x1]`. |
+| 3. Konversi `uint8` | Gunakan pembulatan eksplisit **`floor_half_up`** (bukan pemotongan `int(v)` dan bukan *banker's rounding* `round-half-to-even`): `u8 = uint8(floor(clamp(v, 0.0, 255.0) + 0.5))` dalam rentang `[0, 255]`. |
+| 4. Urutan kanal & Normalisasi `float32` | Kanal wajib **RGB**. Konversi tiap piksel `u8` ke `float32`: `norm = (float32(u8) - normalization_mean) / normalization_std` dengan `mean = 127.5`, `std = 127.5` → menghasilkan `float32` dalam rentang `[−1.0, 1.0]`. |
+| 5. Bentuk keluaran | `[1, S, S, 3]` (**NHWC**, `float32`). |
 
-Catatan: nilai persis crop, resize, dan normalisasi harus **ditulis ke `ml/artifacts/preprocess.json`** dan dibaca oleh kedua sisi sebagai satu-satunya sumber nilai.
+Catatan: seluruh parameter kontrak di atas ditulis eksplisit ke `ml/artifacts/preprocess.json` (dan disalin identik ke `mobile/assets/models/preprocess.json`) sebagai satu-satunya sumber kebenaran parameter.
 
 ## 5. Kontrak Ekspor TFLite
 

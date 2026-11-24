@@ -19,6 +19,10 @@ class DataWajah extends Model
         'aktif',
     ];
 
+    protected $hidden = [
+        'embedding',
+    ];
+
     protected $casts = [
         'aktif'          => 'boolean',
         'tanggal_daftar' => 'datetime',

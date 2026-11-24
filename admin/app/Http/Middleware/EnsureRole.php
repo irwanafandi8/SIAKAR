@@ -28,11 +28,15 @@ class EnsureRole
         }
 
         if (!in_array($user->role, $roles, true)) {
-            return ApiResponse::error(
-                'Peran Anda tidak berhak mengakses layanan ini.',
-                'FORBIDDEN_ROLE',
-                403
-            );
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return ApiResponse::error(
+                    'Peran Anda tidak berhak mengakses layanan ini.',
+                    'FORBIDDEN_ROLE',
+                    403
+                );
+            }
+
+            abort(403, 'Peran Anda tidak berhak mengakses halaman ini.');
         }
 
         return $next($request);
