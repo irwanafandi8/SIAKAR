@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "siakar-ml"
+version = "0.1.0"
+description = "SIAKAR — Modul ML: embedding wajah, detektor, liveness (dari nol)."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []          # dependensi runtime ada di requirements.txt
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"

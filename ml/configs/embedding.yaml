@@ -1,0 +1,39 @@
+# Hyperparameter model embedding CNN SIAKAR
+# Semua nilai adalah PLACEHOLDER — sesuaikan setelah uji waktu epoch
+
+model:
+  input_size: 112          # piksel; boleh diturunkan ke 96 atau 64 bila CPU terlalu lambat
+  embedding_dim: 128
+  stages:
+    - filters: 32
+      stride: 2
+    - filters: 64
+      num_blocks: 2
+      stride: 2
+    - filters: 128
+      num_blocks: 2
+      stride: 2
+    - filters: 256
+      num_blocks: 2
+      stride: 2
+
+data:
+  n_identities: 500        # mulai kecil; naikkan setelah uji waktu epoch
+  train_ratio: 0.7         # rasio identitas latih (kelompok A)
+  val_ratio: 0.15          # rasio identitas validasi (kelompok B)
+  test_ratio: 0.15         # rasio identitas uji (kelompok C)
+  seed: 42
+
+training:
+  batch_size: 32
+  epochs: 50
+  learning_rate: 0.001
+  optimizer: adam
+  loss: softmax_crossentropy
+  early_stopping_patience: 10
+  reduce_lr_patience: 5
+  reduce_lr_factor: 0.5
+  checkpoint_dir: artifacts/checkpoints/embedding
+
+preprocess_config: artifacts/preprocess.json
+split_output: data/splits/embedding_split.json

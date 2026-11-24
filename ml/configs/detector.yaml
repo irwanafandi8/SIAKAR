@@ -1,0 +1,21 @@
+# Hyperparameter detektor wajah CNN SIAKAR (prioritas 2)
+# PLACEHOLDER — isi setelah embedding berjalan end-to-end
+
+model:
+  input_size: 64           # piksel; wajah/bukan-wajah crop area oval
+  num_classes: 2           # wajah vs. bukan-wajah
+  filters: [32, 64, 128]
+
+data:
+  positive_dir: data/raw/digiface   # crop wajah (DigiFace, digeser/diskalakan acak)
+  negative_dir: data/negatives      # gambar non-wajah (sumber OPEN — D-44 OPEN)
+  seed: 42
+  batch_size: 32
+
+training:
+  epochs: 30
+  learning_rate: 0.001
+  checkpoint_dir: artifacts/checkpoints/detector
+
+preprocess_config: artifacts/preprocess.json
+threshold: 0.5             # awal; akan disesuaikan dari validasi

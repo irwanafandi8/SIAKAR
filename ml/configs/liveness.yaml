@@ -1,0 +1,17 @@
+# Hyperparameter liveness SIAKAR (prioritas 3)
+# PLACEHOLDER — kerjakan setelah embedding dan detektor selesai
+
+# Level L1: challenge-response tanpa model (D-27, fallback)
+liveness_level: L1         # ganti ke L2 bila data liveness tersedia (D-44 OPEN)
+
+challenge_response:
+  # Tantangan acak berbasis perubahan posisi/skala kotak detektor antar-frame
+  min_move_px: 20          # pergerakan minimum yang dihitung sebagai valid
+  challenge_timeout_s: 10
+
+# Level L2 (opsional): classifier kedip mata
+# Bergantung pada ketersediaan data D-44 — belum dikerjakan
+eye_state_classifier:
+  enabled: false
+  input_size: 32
+  checkpoint_dir: artifacts/checkpoints/liveness
