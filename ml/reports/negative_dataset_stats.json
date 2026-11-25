@@ -1,0 +1,5 @@
+{
+  "negative_dir": "data/negatives",
+  "newly_created_synthetic": 4000,
+  "total_negative_images": 4000
+}

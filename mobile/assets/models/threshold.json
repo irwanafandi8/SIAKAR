@@ -1,0 +1,10 @@
+{
+  "threshold": 0.2167,
+  "metric_basis": "EER (Equal Error Rate) pada pasangan validasi Kelompok B",
+  "far": 0.111,
+  "frr": 0.111,
+  "eer": 0.111,
+  "roc_auc": 0.9519,
+  "val_pairs": 2000,
+  "date": "2026-11-25T16:24:51.141448"
+}

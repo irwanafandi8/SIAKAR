@@ -1,0 +1,4 @@
+method,cls_top1_acc,cls_top5_acc,val_threshold,val_eer,val_roc_auc,test_far,test_frr,test_eer,test_roc_auc,test_tar_far_1pct,test_tar_far_01pct,test_verif_acc
+hog,0.1102,0.2498,0.717,0.408,0.6249,0.42,0.422,0.421,0.624,0.103,0.024,0.579
+lbp,0.0156,0.0574,0.9292,0.474,0.5441,0.467,0.476,0.471,0.5536,0.042,0.014,0.5285
+hog_lbp,0.1152,0.2481,0.8178,0.42,0.6071,0.443,0.432,0.435,0.6031,0.1,0.024,0.5625

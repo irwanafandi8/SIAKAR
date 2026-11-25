@@ -5,10 +5,10 @@ return [
     |--------------------------------------------------------------------------
     | Face Recognition Configuration
     |--------------------------------------------------------------------------
-    | Ambang sementara: akan diganti dari ml/artifacts/threshold.json
-    | setelah evaluasi validasi model selesai (D-31).
+    | Ambang telah disinkronkan dari ml/artifacts/threshold.json (0.2167).
+    | Metrik dasar: EER pada pasangan validasi Kelompok B.
     */
-    'threshold' => (float) env('FACE_SIMILARITY_THRESHOLD', 0.75), // akan diganti dari ml/artifacts/threshold.json
+    'threshold' => (float) env('FACE_SIMILARITY_THRESHOLD', 0.2167),
     'embedding_dim' => (int) env('FACE_EMBEDDING_DIM', 128),
     'norm_tolerance' => (float) env('FACE_NORM_TOLERANCE', 0.05),
     'min_enroll_embeddings' => 3,

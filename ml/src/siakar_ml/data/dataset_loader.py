@@ -108,7 +108,7 @@ def create_classification_dataset(
 
     ds = tf.data.Dataset.from_tensor_slices((paths, labels))
     if training:
-        ds = ds.shuffle(buffer_size=min(len(paths), 4096), seed=seed, reshuffle_each_iteration=True)
+        ds = ds.shuffle(buffer_size=len(paths), seed=seed, reshuffle_each_iteration=True)
 
     preprocess_fn = build_tf_preprocess_fn(preprocess_cfg, input_size_override=input_size_override)
     ds = ds.map(preprocess_fn, num_parallel_calls=tf.data.AUTOTUNE)

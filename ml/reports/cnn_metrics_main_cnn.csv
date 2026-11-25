@@ -1,0 +1,2 @@
+run_name,embedding_dim,input_size,cls_top1_acc,cls_top5_acc,val_threshold,val_eer,val_roc_auc,test_far,test_frr,test_eer,test_roc_auc,test_tar_far_1pct,test_tar_far_01pct,test_verif_acc
+main_cnn,128,112,0.8094,0.9015,0.2167,0.111,0.9519,0.106,0.108,0.108,0.9588,0.616,0.408,0.893

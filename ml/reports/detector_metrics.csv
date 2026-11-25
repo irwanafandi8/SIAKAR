@@ -1,0 +1,3 @@
+split,threshold,accuracy,precision,recall,f1,roc_auc,mean_bbox_iou,bbox_mae,n_samples
+val,0.52,0.9958,0.9934,0.9983,0.9958,0.999,0.8078,0.0374,1200
+test,0.52,0.995,0.995,0.995,0.995,0.9999,0.8021,0.0384,1200

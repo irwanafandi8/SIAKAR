@@ -1,11 +1,11 @@
 # Hyperparameter model embedding CNN SIAKAR (sesuai DECISIONS.md D-46 & ML_SPEC.md §3.1)
 
 model:
-  input_size: 112          # wajib selaras dengan artifacts/preprocess.json
-  embedding_dim: 128       # kontrak ekspor TFLite: [1, 128] L2-normalized (ablasi boleh 64)
-  head_type: softmax       # 'softmax' atau 'cosface' (untuk ablasi T-203)
+  input_size: 112 # wajib selaras dengan artifacts/preprocess.json
+  embedding_dim: 128 # kontrak ekspor TFLite: [1, 128] L2-normalized (ablasi boleh 64)
+  head_type: cosface # 'cosface' atau 'cosface' (untuk ablasi T-203)
   cosface_scale: 30.0
-  cosface_margin: 0.20
+  cosface_margin: 0.15
   stages:
     - filters: 32
       num_blocks: 1
@@ -23,7 +23,7 @@ model:
 data:
   raw_dir: data/raw/digiface
   splits_dir: data/splits
-  n_identities: 500        # Kelompok A=350, B=75, C=75
+  n_identities: 1000 # Kelompok A=350, B=75, C=75
   train_ratio: 0.70
   val_ratio: 0.15
   test_ratio: 0.15

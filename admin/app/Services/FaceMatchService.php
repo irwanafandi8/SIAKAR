@@ -186,7 +186,7 @@ class FaceMatchService
      */
     public function isMatch(array $probeEmbedding, array $enrolledEmbedding, ?float $threshold = null): array
     {
-        $activeThreshold = $threshold ?? (float) config('face.threshold', 0.75);
+        $activeThreshold = $threshold ?? (float) config('face.threshold', 0.2167);
         $similarity = $this->cosineSimilarity($probeEmbedding, $enrolledEmbedding);
 
         return [

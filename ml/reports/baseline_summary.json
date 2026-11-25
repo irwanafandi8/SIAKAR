@@ -1,0 +1,179 @@
+{
+  "seed": 42,
+  "methods": {
+    "hog": {
+      "classification": {
+        "top1_accuracy": 0.11015873015873016,
+        "top5_accuracy": 0.24976190476190477,
+        "n_samples": 12600,
+        "n_classes": 700,
+        "worst_identities": [
+          {
+            "identity": "10",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "1000",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "1001",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "1004",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "1005",
+            "accuracy": 0.0
+          }
+        ]
+      },
+      "validation": {
+        "optimal_threshold": 0.716958224773407,
+        "applied_threshold": 0.716958224773407,
+        "eer": 0.40800000000000003,
+        "roc_auc": 0.624946,
+        "far": 0.408,
+        "frr": 0.408,
+        "far_at_threshold": 0.408,
+        "frr_at_threshold": 0.408,
+        "accuracy": 0.592,
+        "tar_at_far_1pct": 0.089,
+        "tar_at_far_01pct": 0.044,
+        "n_pairs": 2000
+      },
+      "test": {
+        "optimal_threshold": 0.7169188261032104,
+        "applied_threshold": 0.716958224773407,
+        "eer": 0.42100000000000004,
+        "roc_auc": 0.62395,
+        "far": 0.42,
+        "frr": 0.422,
+        "far_at_threshold": 0.42,
+        "frr_at_threshold": 0.422,
+        "accuracy": 0.579,
+        "tar_at_far_1pct": 0.103,
+        "tar_at_far_01pct": 0.024,
+        "n_pairs": 2000
+      }
+    },
+    "lbp": {
+      "classification": {
+        "top1_accuracy": 0.015555555555555555,
+        "top5_accuracy": 0.05738095238095238,
+        "n_samples": 12600,
+        "n_classes": 700,
+        "worst_identities": [
+          {
+            "identity": "1",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "10",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "1000",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "1001",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "1004",
+            "accuracy": 0.0
+          }
+        ]
+      },
+      "validation": {
+        "optimal_threshold": 0.9292231798171997,
+        "applied_threshold": 0.9292231798171997,
+        "eer": 0.474,
+        "roc_auc": 0.5440710000000001,
+        "far": 0.474,
+        "frr": 0.474,
+        "far_at_threshold": 0.474,
+        "frr_at_threshold": 0.474,
+        "accuracy": 0.526,
+        "tar_at_far_1pct": 0.04,
+        "tar_at_far_01pct": 0.015,
+        "n_pairs": 2000
+      },
+      "test": {
+        "optimal_threshold": 0.9287203550338745,
+        "applied_threshold": 0.9292231798171997,
+        "eer": 0.471,
+        "roc_auc": 0.553553,
+        "far": 0.467,
+        "frr": 0.476,
+        "far_at_threshold": 0.467,
+        "frr_at_threshold": 0.476,
+        "accuracy": 0.5285,
+        "tar_at_far_1pct": 0.042,
+        "tar_at_far_01pct": 0.014,
+        "n_pairs": 2000
+      }
+    },
+    "hog_lbp": {
+      "classification": {
+        "top1_accuracy": 0.11523809523809524,
+        "top5_accuracy": 0.2480952380952381,
+        "n_samples": 12600,
+        "n_classes": 700,
+        "worst_identities": [
+          {
+            "identity": "10",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "1001",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "1004",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "101",
+            "accuracy": 0.0
+          },
+          {
+            "identity": "1010",
+            "accuracy": 0.0
+          }
+        ]
+      },
+      "validation": {
+        "optimal_threshold": 0.8178192377090454,
+        "applied_threshold": 0.8178192377090454,
+        "eer": 0.42000000000000004,
+        "roc_auc": 0.607097,
+        "far": 0.42,
+        "frr": 0.42,
+        "far_at_threshold": 0.42,
+        "frr_at_threshold": 0.42,
+        "accuracy": 0.58,
+        "tar_at_far_1pct": 0.09,
+        "tar_at_far_01pct": 0.035,
+        "n_pairs": 2000
+      },
+      "test": {
+        "optimal_threshold": 0.819003164768219,
+        "applied_threshold": 0.8178192377090454,
+        "eer": 0.43500000000000005,
+        "roc_auc": 0.6031475,
+        "far": 0.443,
+        "frr": 0.432,
+        "far_at_threshold": 0.443,
+        "frr_at_threshold": 0.432,
+        "accuracy": 0.5625,
+        "tar_at_far_1pct": 0.1,
+        "tar_at_far_01pct": 0.024,
+        "n_pairs": 2000
+      }
+    }
+  }
+}

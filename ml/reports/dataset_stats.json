@@ -1,0 +1,11 @@
+{
+  "dataset": "DigiFace-1M",
+  "raw_dir": "data/raw/digiface",
+  "total_identities": 1000,
+  "total_images": 72000,
+  "min_images_per_identity": 72,
+  "max_images_per_identity": 72,
+  "avg_images_per_identity": 72.0,
+  "license_files_found": [],
+  "citation": "Bae et al., 'DigiFace-1M: 1 Million Synthetic Faces for Face Recognition Validation', IEEE/CVF WACV 2023."
+}

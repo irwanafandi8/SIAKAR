@@ -1,0 +1,41 @@
+{
+  "validation": {
+    "threshold": 0.52,
+    "accuracy": 0.9958,
+    "precision": 0.9934,
+    "recall": 0.9983,
+    "f1": 0.9958,
+    "roc_auc": 0.999,
+    "mean_bbox_iou": 0.8078,
+    "bbox_mae": 0.0374,
+    "n_samples": 1200
+  },
+  "test": {
+    "threshold": 0.52,
+    "accuracy": 0.995,
+    "precision": 0.995,
+    "recall": 0.995,
+    "f1": 0.995,
+    "roc_auc": 0.9999,
+    "mean_bbox_iou": 0.8021,
+    "bbox_mae": 0.0384,
+    "n_samples": 1200
+  },
+  "threshold_path": "artifacts\\detector_threshold.json",
+  "metrics_csv_path": "reports\\detector_metrics.csv",
+  "export": {
+    "tflite_path": "artifacts\\detector.tflite",
+    "tflite_size_bytes": 1187884,
+    "golden_manifest_path": "artifacts\\golden_detector\\detector_golden.json",
+    "max_abs_diff": 1.1920928955078125e-07,
+    "copied_to_mobile": [
+      "..\\mobile\\assets\\models\\detector.tflite",
+      "..\\mobile\\assets\\models\\detector_threshold.json",
+      "..\\mobile\\test\\golden_detector\\detector_golden.json",
+      "..\\mobile\\test\\golden_detector\\neg_gradient.png",
+      "..\\mobile\\test\\golden_detector\\neg_grid.png",
+      "..\\mobile\\test\\golden_detector\\pos_centered.png",
+      "..\\mobile\\test\\golden_detector\\pos_shifted.png"
+    ]
+  }
+}

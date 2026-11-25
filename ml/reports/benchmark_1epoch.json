@@ -1,0 +1,99 @@
+{
+  "timestamp": "2026-11-25T09:29:35.874003",
+  "config_tested": {
+    "input_size": 112,
+    "embedding_dim": 128,
+    "num_classes": 350,
+    "steps_executed": 591,
+    "total_images_processed": 18900
+  },
+  "model_size": {
+    "training_model_params": 1243710,
+    "backbone_params": 1198560,
+    "estimated_tflite_float32_mb": 4.572
+  },
+  "timing": {
+    "epoch_wall_seconds": 69.981,
+    "warmup_first_step_seconds": 2.019,
+    "steady_avg_step_ms": 114.03,
+    "steady_images_per_sec": 280.45,
+    "initial_loss": 5.8735,
+    "final_loss": 5.3604
+  },
+  "memory": {
+    "rss_before_mb": 276.81,
+    "rss_after_mb": 350.93,
+    "peak_rss_mb": 551.44,
+    "peak_python_heap_mb": 8.39
+  },
+  "proposal": {
+    "recommended_n_identities": 1000,
+    "recommended_input_size": 112,
+    "recommended_batch_size": 32,
+    "target_epochs": 30,
+    "max_budget_minutes": 120.0,
+    "rationale": "Berdasarkan kecepatan ukur aktual 280.45 gambar/detik pada input 112x112 (puncak RAM proses ~551.4 MB), konfigurasi n_identities=1000 (37800 citra latih Kelompok A) dengan input_size=112 dan batch_size=32 membutuhkan ~134.8 detik/epoch (~67.4 menit untuk 30 epoch), sehingga aman dijalankan di CPU laptop RAM 8 GB.",
+    "projections": [
+      {
+        "n_identities": 1000,
+        "n_train_identities": 700,
+        "n_train_images": 37800,
+        "input_size": 112,
+        "est_images_per_sec": 280.45,
+        "est_epoch_sec": 134.8,
+        "est_total_minutes_30ep": 67.4,
+        "fits_budget": true
+      },
+      {
+        "n_identities": 500,
+        "n_train_identities": 350,
+        "n_train_images": 18900,
+        "input_size": 112,
+        "est_images_per_sec": 280.45,
+        "est_epoch_sec": 67.4,
+        "est_total_minutes_30ep": 33.7,
+        "fits_budget": true
+      },
+      {
+        "n_identities": 500,
+        "n_train_identities": 350,
+        "n_train_images": 18900,
+        "input_size": 96,
+        "est_images_per_sec": 381.73,
+        "est_epoch_sec": 49.5,
+        "est_total_minutes_30ep": 24.8,
+        "fits_budget": true
+      },
+      {
+        "n_identities": 300,
+        "n_train_identities": 210,
+        "n_train_images": 11340,
+        "input_size": 96,
+        "est_images_per_sec": 381.73,
+        "est_epoch_sec": 29.7,
+        "est_total_minutes_30ep": 14.9,
+        "fits_budget": true
+      },
+      {
+        "n_identities": 300,
+        "n_train_identities": 210,
+        "n_train_images": 11340,
+        "input_size": 64,
+        "est_images_per_sec": 858.89,
+        "est_epoch_sec": 13.2,
+        "est_total_minutes_30ep": 6.6,
+        "fits_budget": true
+      },
+      {
+        "n_identities": 200,
+        "n_train_identities": 140,
+        "n_train_images": 7560,
+        "input_size": 64,
+        "est_images_per_sec": 858.89,
+        "est_epoch_sec": 8.8,
+        "est_total_minutes_30ep": 4.4,
+        "fits_budget": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "threshold": 0.52,
+  "metric_basis": "F1 maksimum pada himpunan validasi detektor",
+  "val_f1": 0.9958,
+  "val_precision": 0.9934,
+  "val_recall": 0.9983,
+  "val_mean_bbox_iou": 0.8078,
+  "date": "2026-11-25T11:11:59.942502"
+}
