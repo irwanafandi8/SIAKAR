@@ -59,11 +59,11 @@ Format tugas: `ID` · jalur · deskripsi · **Selesai bila** (kriteria yang dapa
 | ID    | Jalur  | Tugas                                                                                             | Selesai bila                                         |
 | ----- | ------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | T-301 | MOB    | Absen masuk/pulang end-to-end (detektor → embedding → API → hasil)                                | Skenario demo 3, 4, 5 dapat dijalankan               |
-| T-302 | MOB    | Beranda, Riwayat, Profil                                                                          | FR-05 memenuhi kriteria penerimaan                   |
+| T-302 | MOB    | ✅ Beranda, Riwayat, Profil                                                                       | FR-05 memenuhi kriteria penerimaan (Analyze & test lulus) |
 | T-303 | ML+MOB | Integrasi detektor ke kamera; liveness L1 (challenge-response)                                    | Absen menolak bila detektor/liveness gagal           |
 | T-304 | ML     | Ukur latensi di ponsel; uji asap singkat di ponsel (bukan akurasi) untuk memeriksa selisih domain | Angka latensi tercatat; catatan keterbatasan ditulis |
 | T-311 | BE     | ✅ `/leaves`, `/approvals`, `/team/recap` + transaksi persetujuan                                 | Feature test lulus (Selesai)                         |
-| T-321 | MOB    | Fitur izin (karyawan) + persetujuan + rekap (atasan)                                              | FR-06/07/08 berjalan                                 |
+| T-321 | MOB    | ✅ Fitur izin (karyawan) + persetujuan + rekap (atasan)                                           | FR-06/07/08 berjalan (Analyze & test lulus)          |
 | T-331 | ADM    | ✅ CRUD shift, jadwal, lokasi, hari libur                                                         | FR-10/11 berjalan (Selesai)                          |
 | T-332 | ADM    | ✅ Koreksi absensi + rekap laporan + CSV                                                          | FR-12/13/14 berjalan (Selesai)                       |
 | T-333 | DOC    | Proposal PM2 (3–5 hal, PDF) dari PRD/DESIGN; laporan progres minggu 3                             | Terkirim                                             |

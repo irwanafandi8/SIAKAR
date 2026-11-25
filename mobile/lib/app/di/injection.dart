@@ -1,10 +1,27 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import '../../core/network/api_client.dart';
+import '../../features/approval/data/approval_data.dart';
+import '../../features/approval/domain/repositories/approval_repository.dart';
+import '../../features/approval/domain/usecases/approval_usecases.dart';
+import '../../features/approval/presentation/cubit/approval_cubits.dart';
+import '../../features/attendance/data/datasources/attendance_remote_datasource.dart';
+import '../../features/attendance/data/repositories/attendance_repository_impl.dart';
+import '../../features/attendance/domain/repositories/attendance_repository.dart';
+import '../../features/attendance/domain/usecases/attendance_usecases.dart';
+import '../../features/attendance/presentation/cubit/history_cubit.dart';
+import '../../features/attendance/presentation/cubit/today_attendance_cubit.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_usecase.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
+import '../../features/leave/data/datasources/leave_remote_datasource.dart';
+import '../../features/leave/data/repositories/leave_repository_impl.dart';
+import '../../features/leave/domain/repositories/leave_repository.dart';
+import '../../features/leave/domain/usecases/leave_usecases.dart';
+import '../../features/leave/presentation/cubit/leave_cubit.dart';
+import '../../features/profile/data/profile_repository_impl.dart';
+import '../../features/profile/profile_feature.dart';
 
 final sl = GetIt.instance;
 
@@ -18,24 +35,118 @@ Future<void> initInjection() async {
     () => ApiClient(secureStorage: sl<FlutterSecureStorage>()),
   );
 
-  // 2. Repository
+  // 2. DataSources
+  sl.registerLazySingleton<AttendanceRemoteDataSource>(
+    () => AttendanceRemoteDataSource(apiClient: sl<ApiClient>()),
+  );
+  sl.registerLazySingleton<LeaveRemoteDataSource>(
+    () => LeaveRemoteDataSource(apiClient: sl<ApiClient>()),
+  );
+  sl.registerLazySingleton<ApprovalRemoteDataSource>(
+    () => ApprovalRemoteDataSource(apiClient: sl<ApiClient>()),
+  );
+
+  // 3. Repositories
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       apiClient: sl<ApiClient>(),
       secureStorage: sl<FlutterSecureStorage>(),
     ),
   );
+  sl.registerLazySingleton<AttendanceRepository>(
+    () => AttendanceRepositoryImpl(
+      remoteDataSource: sl<AttendanceRemoteDataSource>(),
+    ),
+  );
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(apiClient: sl<ApiClient>()),
+  );
+  sl.registerLazySingleton<LeaveRepository>(
+    () => LeaveRepositoryImpl(remoteDataSource: sl<LeaveRemoteDataSource>()),
+  );
+  sl.registerLazySingleton<ApprovalRepository>(
+    () => ApprovalRepositoryImpl(
+      remoteDataSource: sl<ApprovalRemoteDataSource>(),
+    ),
+  );
 
-  // 3. UseCase
+  // 4. UseCases
   sl.registerLazySingleton<LoginUseCase>(
     () => LoginUseCase(sl<AuthRepository>()),
   );
+  sl.registerLazySingleton<GetTodayAttendanceUseCase>(
+    () => GetTodayAttendanceUseCase(sl<AttendanceRepository>()),
+  );
+  sl.registerLazySingleton<GetAttendanceHistoryUseCase>(
+    () => GetAttendanceHistoryUseCase(sl<AttendanceRepository>()),
+  );
+  sl.registerLazySingleton<GetProfileInfoUseCase>(
+    () => GetProfileInfoUseCase(
+      authRepository: sl<AuthRepository>(),
+      profileRepository: sl<ProfileRepository>(),
+    ),
+  );
+  sl.registerLazySingleton<LogoutUseCase>(
+    () => LogoutUseCase(sl<AuthRepository>()),
+  );
+  sl.registerLazySingleton<GetMyLeavesUseCase>(
+    () => GetMyLeavesUseCase(sl<LeaveRepository>()),
+  );
+  sl.registerLazySingleton<SubmitLeaveUseCase>(
+    () => SubmitLeaveUseCase(sl<LeaveRepository>()),
+  );
+  sl.registerLazySingleton<GetApprovalsUseCase>(
+    () => GetApprovalsUseCase(sl<ApprovalRepository>()),
+  );
+  sl.registerLazySingleton<ApproveLeaveUseCase>(
+    () => ApproveLeaveUseCase(sl<ApprovalRepository>()),
+  );
+  sl.registerLazySingleton<RejectLeaveUseCase>(
+    () => RejectLeaveUseCase(sl<ApprovalRepository>()),
+  );
+  sl.registerLazySingleton<GetTeamRecapUseCase>(
+    () => GetTeamRecapUseCase(sl<ApprovalRepository>()),
+  );
 
-  // 4. Cubit
+  // 5. Cubits
   sl.registerFactory<AuthCubit>(
     () => AuthCubit(
       loginUseCase: sl<LoginUseCase>(),
       authRepository: sl<AuthRepository>(),
+    ),
+  );
+  sl.registerFactory<TodayAttendanceCubit>(
+    () => TodayAttendanceCubit(
+      getTodayAttendanceUseCase: sl<GetTodayAttendanceUseCase>(),
+    ),
+  );
+  sl.registerFactory<HistoryCubit>(
+    () => HistoryCubit(
+      getAttendanceHistoryUseCase: sl<GetAttendanceHistoryUseCase>(),
+    ),
+  );
+  sl.registerFactory<ProfileCubit>(
+    () => ProfileCubit(
+      getProfileInfoUseCase: sl<GetProfileInfoUseCase>(),
+      logoutUseCase: sl<LogoutUseCase>(),
+    ),
+  );
+  sl.registerFactory<LeaveCubit>(
+    () => LeaveCubit(
+      getMyLeavesUseCase: sl<GetMyLeavesUseCase>(),
+      submitLeaveUseCase: sl<SubmitLeaveUseCase>(),
+    ),
+  );
+  sl.registerFactory<ApprovalCubit>(
+    () => ApprovalCubit(
+      getApprovalsUseCase: sl<GetApprovalsUseCase>(),
+      approveLeaveUseCase: sl<ApproveLeaveUseCase>(),
+      rejectLeaveUseCase: sl<RejectLeaveUseCase>(),
+    ),
+  );
+  sl.registerFactory<TeamRecapCubit>(
+    () => TeamRecapCubit(
+      getTeamRecapUseCase: sl<GetTeamRecapUseCase>(),
     ),
   );
 }
