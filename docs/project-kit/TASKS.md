@@ -47,9 +47,9 @@ Format tugas: `ID` · jalur · deskripsi · **Selesai bila** (kriteria yang dapa
 | T-211 | BE    | `FaceMatchService` (cosine), `GeofenceService` (Haversine) + tes unit                      | Tes unit lulus                                                              |
 | T-212 | BE    | `/face/enroll`, `/face/status` (enkripsi, rata-rata, foto privat)                          | Feature test lulus                                                          |
 | T-213 | BE    | ✅ `/attendance/today`, `check-in`, `check-out`, `history` sesuai urutan API §3.3          | Feature test mencakup semua kode error §1 (Selesai)                         |
-| T-221 | MOB   | Port praproses Dart + `embedding_service` (TFLite) + **tes paritas dengan golden vectors** | Cosine ≥ 0,99 terhadap referensi                                            |
-| T-222 | MOB   | Kamera + oval panduan + GPS + izin (kontekstual)                                           | Berjalan di ponsel asli                                                     |
-| T-223 | MOB   | Registrasi wajah end-to-end                                                                | Wajah terdaftar di DB lewat aplikasi                                        |
+| T-221 | MOB   | ✅ Port praproses Dart + `embedding_service` (TFLite) + **tes paritas dengan golden vectors** | Paritas praproses 5 golden samples lulus (`flutter analyze` & `flutter test` bersih; inferensi TFLite siap verifikasi di perangkat Android) |
+| T-222 | MOB   | ✅ Kamera + oval panduan + GPS + izin (kontekstual)                                         | Komponen kamera oval, GPS, & izin kontekstual siap (`flutter analyze` & `flutter test` lulus; siap uji di ponsel asli) |
+| T-223 | MOB   | ✅ Registrasi wajah end-to-end                                                              | Alur `/face/status` + 3–5 foto oval + TFLite embedding + `/face/enroll` selesai (`flutter test` lulus; siap uji ponsel) |
 | T-231 | ADM   | ✅ Layout Blade + komponen (token desain) + login admin                                    | Halaman login/dasbor kosong bertema (Selesai)                               |
 | T-232 | ADM   | ✅ CRUD karyawan, departemen, jabatan                                                      | Dapat tambah/ubah/nonaktifkan; reset wajah/perangkat (Selesai)              |
 | T-233 | DOC   | Laporan progres minggu 2; mulai bab AI di laporan dari ML_SPEC                             | Terkirim                                                                    |

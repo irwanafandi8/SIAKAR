@@ -22,6 +22,16 @@ class ErrorMessages {
     'TOO_MANY_ATTEMPTS': 'Terlalu banyak percobaan. Harap tunggu beberapa saat sebelum mencoba lagi.',
     'SERVER_ERROR': 'Terjadi kesalahan pada server. Coba lagi nanti.',
     'NETWORK_ERROR': 'Koneksi jaringan terputus. Periksa sambungan data atau Wi-Fi Anda.',
+    'CAMERA_PERMISSION_DENIED': 'Izin kamera ditolak. Izinkan akses kamera untuk mengambil foto wajah.',
+    'CAMERA_PERMISSION_PERMANENTLY_DENIED': 'Izin kamera ditolak permanen. Buka Pengaturan Aplikasi untuk mengaktifkan izin kamera.',
+    'CAMERA_UNAVAILABLE': 'Kamera depan tidak ditemukan atau gagal diinisialisasi pada perangkat ini.',
+    'LOCATION_SERVICE_DISABLED': 'Layanan lokasi (GPS) mati. Aktifkan GPS perangkat Anda terlebih dahulu.',
+    'LOCATION_PERMISSION_DENIED': 'Izin lokasi ditolak. Izinkan akses lokasi untuk memverifikasi area kantor.',
+    'LOCATION_PERMISSION_PERMANENTLY_DENIED': 'Izin lokasi ditolak permanen. Buka Pengaturan Aplikasi untuk mengaktifkan izin lokasi.',
+    'MOCK_LOCATION_DETECTED': 'Lokasi palsu (Mock GPS) terdeteksi. Matikan aplikasi lokasi palsu untuk melanjutkan.',
+    'FACE_NOT_IN_OVAL': 'Wajah tidak terdeteksi dengan jelas di dalam bingkai oval. Pastikan wajah berada di tengah oval dengan pencahayaan cukup.',
+    'LIGHTING_TOO_DARK': 'Cahaya kurang terang. Pindah ke tempat dengan pencahayaan lebih baik.',
+    'LIGHTING_TOO_BRIGHT': 'Cahaya terlalu silau. Hindari sumber cahaya langsung di belakang atau depan wajah.',
   };
 
   static String fromCode(String? code, [String? fallbackMessage]) {

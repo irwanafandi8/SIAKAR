@@ -284,7 +284,13 @@ class _HomePageState extends State<HomePage> {
           PrimaryButton(
             text: 'Registrasi Wajah',
             icon: Icons.face_retouching_natural,
-            onPressed: () => context.push('/face/enroll'),
+            onPressed: () async {
+              await context.push('/face/enroll');
+              if (context.mounted) {
+                context.read<AuthCubit>().checkAuthStatus();
+                context.read<TodayAttendanceCubit>().loadToday();
+              }
+            },
           ),
         ],
       );

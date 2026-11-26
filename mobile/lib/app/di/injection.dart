@@ -1,6 +1,17 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import '../../core/device/location_service.dart';
+import '../../core/device/permission_service.dart';
+import '../../core/ml/embedding_service.dart';
+import '../../core/ml/face_oval_validator.dart';
+import '../../core/ml/preprocess.dart';
 import '../../core/network/api_client.dart';
+import '../../features/face_enrollment/data/datasources/face_enrollment_remote_datasource.dart';
+import '../../features/face_enrollment/data/datasources/ml_face_sample_extractor.dart';
+import '../../features/face_enrollment/data/repositories/face_enrollment_repository_impl.dart';
+import '../../features/face_enrollment/domain/repositories/face_enrollment_repository.dart';
+import '../../features/face_enrollment/domain/usecases/face_enrollment_usecases.dart';
+import '../../features/face_enrollment/presentation/cubit/face_enrollment_cubit.dart';
 import '../../features/approval/data/approval_data.dart';
 import '../../features/approval/domain/repositories/approval_repository.dart';
 import '../../features/approval/domain/usecases/approval_usecases.dart';
@@ -35,7 +46,47 @@ Future<void> initInjection() async {
     () => ApiClient(secureStorage: sl<FlutterSecureStorage>()),
   );
 
+  // 1b. ML Core (Praproses + TFLite Embedding)
+  PreprocessService preprocessService;
+  try {
+    preprocessService = await PreprocessService.fromAsset();
+  } catch (_) {
+    preprocessService = PreprocessService.defaultConfig();
+  }
+  sl.registerSingleton<PreprocessService>(preprocessService);
+
+  sl.registerLazySingleton<EmbeddingService>(
+    () => TfliteEmbeddingService(
+      preprocessService: sl<PreprocessService>(),
+    ),
+  );
+
+  sl.registerLazySingleton<FaceInOvalValidator>(
+    () => DefaultFaceOvalValidator(
+      preprocessService: sl<PreprocessService>(),
+    ),
+  );
+
+  // 1c. Device Services (Izin Kontekstual & GPS M4)
+  sl.registerLazySingleton<DevicePermissionService>(
+    () => const PermissionHandlerService(),
+  );
+  sl.registerLazySingleton<LocationService>(
+    () => GeolocatorLocationService(
+      permissionService: sl<DevicePermissionService>(),
+    ),
+  );
+
   // 2. DataSources
+  sl.registerLazySingleton<FaceEnrollmentRemoteDataSource>(
+    () => FaceEnrollmentRemoteDataSource(apiClient: sl<ApiClient>()),
+  );
+  sl.registerLazySingleton<FaceSampleExtractor>(
+    () => MlFaceSampleExtractor(
+      ovalValidator: sl<FaceInOvalValidator>(),
+      embeddingService: sl<EmbeddingService>(),
+    ),
+  );
   sl.registerLazySingleton<AttendanceRemoteDataSource>(
     () => AttendanceRemoteDataSource(apiClient: sl<ApiClient>()),
   );
@@ -69,8 +120,22 @@ Future<void> initInjection() async {
       remoteDataSource: sl<ApprovalRemoteDataSource>(),
     ),
   );
+  sl.registerLazySingleton<FaceEnrollmentRepository>(
+    () => FaceEnrollmentRepositoryImpl(
+      remoteDataSource: sl<FaceEnrollmentRemoteDataSource>(),
+    ),
+  );
 
   // 4. UseCases
+  sl.registerLazySingleton<GetFaceEnrollmentStatusUseCase>(
+    () => GetFaceEnrollmentStatusUseCase(sl<FaceEnrollmentRepository>()),
+  );
+  sl.registerLazySingleton<ExtractFaceSampleUseCase>(
+    () => ExtractFaceSampleUseCase(sl<FaceSampleExtractor>()),
+  );
+  sl.registerLazySingleton<SubmitFaceEnrollmentUseCase>(
+    () => SubmitFaceEnrollmentUseCase(sl<FaceEnrollmentRepository>()),
+  );
   sl.registerLazySingleton<LoginUseCase>(
     () => LoginUseCase(sl<AuthRepository>()),
   );
@@ -147,6 +212,13 @@ Future<void> initInjection() async {
   sl.registerFactory<TeamRecapCubit>(
     () => TeamRecapCubit(
       getTeamRecapUseCase: sl<GetTeamRecapUseCase>(),
+    ),
+  );
+  sl.registerFactory<FaceEnrollmentCubit>(
+    () => FaceEnrollmentCubit(
+      getStatusUseCase: sl<GetFaceEnrollmentStatusUseCase>(),
+      extractSampleUseCase: sl<ExtractFaceSampleUseCase>(),
+      submitEnrollmentUseCase: sl<SubmitFaceEnrollmentUseCase>(),
     ),
   );
 }

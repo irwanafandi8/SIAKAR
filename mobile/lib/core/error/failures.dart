@@ -63,3 +63,20 @@ class OutOfRadiusFailure extends Failure {
   @override
   List<Object?> get props => [message, code, distanceMeter];
 }
+
+class PermissionFailure extends Failure {
+  final bool isPermanentlyDenied;
+
+  const PermissionFailure({
+    required super.message,
+    required super.code,
+    this.isPermanentlyDenied = false,
+  });
+
+  @override
+  List<Object?> get props => [message, code, isPermanentlyDenied];
+}
+
+class DeviceFailure extends Failure {
+  const DeviceFailure({required super.message, required super.code});
+}

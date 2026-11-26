@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/device/permission_service.dart';
+import '../../core/ml/preprocess.dart';
 import '../../features/approval/presentation/cubit/approval_cubits.dart';
 import '../../features/approval/presentation/pages/approval_pages.dart';
 import '../../features/attendance/presentation/cubit/history_cubit.dart';
@@ -9,6 +11,8 @@ import '../../features/attendance/presentation/pages/history_page.dart';
 import '../../features/attendance/presentation/pages/home_page.dart';
 import '../../features/attendance/presentation/pages/placeholder_feature_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/face_enrollment/presentation/cubit/face_enrollment_cubit.dart';
+import '../../features/face_enrollment/presentation/pages/face_enrollment_page.dart';
 import '../../features/leave/presentation/cubit/leave_cubit.dart';
 import '../../features/leave/presentation/pages/leave_form_page.dart';
 import '../../features/leave/presentation/pages/leave_list_page.dart';
@@ -98,12 +102,13 @@ final appRouter = GoRouter(
     GoRoute(
       parentNavigatorKey: rootNavigatorKey,
       path: '/face/enroll',
-      name: 'face_enroll_placeholder',
-      builder: (context, state) => const PlaceholderFeaturePage(
-        title: 'Registrasi Wajah',
-        description:
-            'Halaman kamera panduan oval & registrasi biometrik wajah (M5 / T-223) akan aktif setelah model TFLite tersedia.',
-        icon: Icons.face_retouching_natural,
+      name: 'face_enroll',
+      builder: (context, state) => BlocProvider<FaceEnrollmentCubit>(
+        create: (_) => sl<FaceEnrollmentCubit>(),
+        child: FaceEnrollmentPage(
+          permissionService: sl<DevicePermissionService>(),
+          preprocessConfig: sl<PreprocessService>().spec,
+        ),
       ),
     ),
     GoRoute(

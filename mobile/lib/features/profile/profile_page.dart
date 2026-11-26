@@ -161,7 +161,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         PrimaryButton(
                           text: face.enrolled ? 'Perbarui Wajah' : 'Daftarkan Wajah',
                           icon: Icons.camera_front,
-                          onPressed: () => context.push('/face/enroll'),
+                          onPressed: () async {
+                            await context.push('/face/enroll');
+                            if (context.mounted) {
+                              context.read<AuthCubit>().checkAuthStatus();
+                              context.read<ProfileCubit>().loadProfile();
+                            }
+                          },
                         ),
                       ],
                     ),
