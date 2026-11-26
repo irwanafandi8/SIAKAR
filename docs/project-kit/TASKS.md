@@ -58,7 +58,7 @@ Format tugas: `ID` · jalur · deskripsi · **Selesai bila** (kriteria yang dapa
 
 | ID    | Jalur  | Tugas                                                                                             | Selesai bila                                         |
 | ----- | ------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| T-301 | MOB    | Absen masuk/pulang end-to-end (detektor → embedding → API → hasil)                                | Skenario demo 3, 4, 5 dapat dijalankan               |
+| T-301 | MOB    | ✅ Absen masuk/pulang end-to-end (detektor → embedding → API → hasil)                              | Alur GPS, kamera oval, TFLite embedding, `/attendance/check-in` & `check-out`, serta sinkronisasi Beranda selesai (`flutter analyze` & `flutter test` lulus) |
 | T-302 | MOB    | ✅ Beranda, Riwayat, Profil                                                                       | FR-05 memenuhi kriteria penerimaan (Analyze & test lulus) |
 | T-303 | ML+MOB | Integrasi detektor ke kamera; liveness L1 (challenge-response)                                    | Absen menolak bila detektor/liveness gagal           |
 | T-304 | ML     | Ukur latensi di ponsel; uji asap singkat di ponsel (bukan akurasi) untuk memeriksa selisih domain | Angka latensi tercatat; catatan keterbatasan ditulis |

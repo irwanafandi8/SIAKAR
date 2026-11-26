@@ -1,10 +1,13 @@
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
+import '../../../../core/device/location_service.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/attendance_entities.dart';
 import '../../domain/repositories/attendance_repository.dart';
 import '../datasources/attendance_remote_datasource.dart';
 
-class AttendanceRepositoryImpl implements AttendanceRepository {
+class AttendanceRepositoryImpl
+    implements AttendanceRepository, AttendanceActionRepository {
   final AttendanceRemoteDataSource remoteDataSource;
 
   const AttendanceRepositoryImpl({required this.remoteDataSource});
@@ -37,5 +40,59 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
         code: 'SERVER_ERROR',
       );
     }
+  }
+
+  @override
+  Future<AttendanceSubmissionResult> submitAttendance({
+    required AttendanceMode mode,
+    required List<double> embedding,
+    required double latitude,
+    required double longitude,
+    required bool livenessPassed,
+    required Uint8List photoBytes,
+    String photoFileName = 'attendance_proof.jpg',
+  }) async {
+    try {
+      return await remoteDataSource.submitAttendance(
+        mode: mode,
+        embedding: embedding,
+        latitude: latitude,
+        longitude: longitude,
+        livenessPassed: livenessPassed,
+        photoBytes: photoBytes,
+        photoFileName: photoFileName,
+      );
+    } on DioException catch (e) {
+      if (e.error is Failure) {
+        throw e.error!;
+      }
+      throw ServerFailure(
+        message: e.message ?? 'Gagal mengirim data absensi ke server.',
+        code: 'SERVER_ERROR',
+      );
+    }
+  }
+}
+
+/// Adaptor lapisan data yang menghubungkan `LocationService` perangkat ke kontrak domain.
+class GeolocatorAttendanceLocationProvider
+    implements AttendanceLocationProvider {
+  final LocationService locationService;
+
+  const GeolocatorAttendanceLocationProvider({required this.locationService});
+
+  @override
+  Future<AttendanceGpsPosition> getCurrentPosition() async {
+    final pos = await locationService.getCurrentPosition();
+    return AttendanceGpsPosition(
+      latitude: pos.latitude,
+      longitude: pos.longitude,
+      accuracyMeters: pos.accuracyMeters,
+    );
+  }
+
+  @override
+  Future<bool> openLocationSettings() {
+    return locationService.openLocationSettings();
   }
 }

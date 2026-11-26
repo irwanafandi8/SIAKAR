@@ -140,3 +140,35 @@ class AttendanceHistoryModel extends AttendanceHistory {
     );
   }
 }
+
+class AttendanceSubmissionResultModel extends AttendanceSubmissionResult {
+  const AttendanceSubmissionResultModel({
+    required super.mode,
+    required super.attendance,
+    super.similarity,
+    super.distanceMeter,
+    required super.status,
+  });
+
+  factory AttendanceSubmissionResultModel.fromJson(
+    Map<String, dynamic> json, {
+    required AttendanceMode mode,
+  }) {
+    final attJson = json['attendance'] as Map<String, dynamic>;
+    final record = AttendanceRecordModel.fromJson(attJson);
+    final sim = json['similarity'] != null
+        ? (json['similarity'] as num).toDouble()
+        : record.skorWajah;
+    final dist = json['distance_meter'] != null
+        ? (json['distance_meter'] as num).toDouble()
+        : null;
+
+    return AttendanceSubmissionResultModel(
+      mode: mode,
+      attendance: record,
+      similarity: sim,
+      distanceMeter: dist,
+      status: json['status']?.toString() ?? record.status,
+    );
+  }
+}

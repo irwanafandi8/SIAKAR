@@ -146,3 +146,75 @@ class AttendanceHistory extends Equatable {
   @override
   List<Object?> get props => [month, items, summary];
 }
+
+/// Mode transaksi kehadiran (Absen Masuk vs Absen Pulang).
+enum AttendanceMode {
+  checkIn,
+  checkOut;
+
+  static AttendanceMode fromQuery(String? raw) {
+    return raw == 'check-out' ? AttendanceMode.checkOut : AttendanceMode.checkIn;
+  }
+
+  String get queryValue =>
+      this == AttendanceMode.checkOut ? 'check-out' : 'check-in';
+
+  String get title =>
+      this == AttendanceMode.checkOut ? 'Absen Pulang' : 'Absen Masuk';
+}
+
+/// Posisi GPS murni domain untuk pengiriman koordinat & pratinjau jarak UI.
+class AttendanceGpsPosition extends Equatable {
+  final double latitude;
+  final double longitude;
+  final double accuracyMeters;
+
+  const AttendanceGpsPosition({
+    required this.latitude,
+    required this.longitude,
+    this.accuracyMeters = 0.0,
+  });
+
+  @override
+  List<Object?> get props => [latitude, longitude, accuracyMeters];
+}
+
+/// Informasi tampilan jarak terdekat ke lokasi kantor (hanya tampilan UI; otoritas tetap di server).
+class NearestOfficePreview extends Equatable {
+  final OfficeLocation office;
+  final double distanceMeters;
+
+  const NearestOfficePreview({
+    required this.office,
+    required this.distanceMeters,
+  });
+
+  @override
+  List<Object?> get props => [office, distanceMeters];
+}
+
+/// Hasil respons sukses `POST /attendance/check-in` atau `POST /attendance/check-out`.
+class AttendanceSubmissionResult extends Equatable {
+  final AttendanceMode mode;
+  final AttendanceRecord attendance;
+  final double? similarity;
+  final double? distanceMeter;
+  final String status;
+
+  const AttendanceSubmissionResult({
+    required this.mode,
+    required this.attendance,
+    this.similarity,
+    this.distanceMeter,
+    required this.status,
+  });
+
+  @override
+  List<Object?> get props => [
+        mode,
+        attendance,
+        similarity,
+        distanceMeter,
+        status,
+      ];
+}

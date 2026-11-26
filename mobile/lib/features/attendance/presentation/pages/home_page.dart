@@ -300,7 +300,12 @@ class _HomePageState extends State<HomePage> {
       return PrimaryButton(
         text: 'Absen Masuk',
         icon: Icons.login,
-        onPressed: () => context.push('/attendance/capture?mode=check-in'),
+        onPressed: () async {
+          await context.push('/attendance/capture?mode=check-in');
+          if (context.mounted) {
+            context.read<TodayAttendanceCubit>().loadToday();
+          }
+        },
       );
     }
 
@@ -309,7 +314,12 @@ class _HomePageState extends State<HomePage> {
         text: 'Absen Pulang',
         icon: Icons.logout,
         backgroundColor: Tk.navy,
-        onPressed: () => context.push('/attendance/capture?mode=check-out'),
+        onPressed: () async {
+          await context.push('/attendance/capture?mode=check-out');
+          if (context.mounted) {
+            context.read<TodayAttendanceCubit>().loadToday();
+          }
+        },
       );
     }
 

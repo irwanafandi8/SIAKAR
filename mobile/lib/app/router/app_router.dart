@@ -5,11 +5,13 @@ import '../../core/device/permission_service.dart';
 import '../../core/ml/preprocess.dart';
 import '../../features/approval/presentation/cubit/approval_cubits.dart';
 import '../../features/approval/presentation/pages/approval_pages.dart';
+import '../../features/attendance/domain/entities/attendance_entities.dart';
+import '../../features/attendance/presentation/cubit/attendance_capture_cubit.dart';
 import '../../features/attendance/presentation/cubit/history_cubit.dart';
 import '../../features/attendance/presentation/cubit/today_attendance_cubit.dart';
+import '../../features/attendance/presentation/pages/attendance_capture_page.dart';
 import '../../features/attendance/presentation/pages/history_page.dart';
 import '../../features/attendance/presentation/pages/home_page.dart';
-import '../../features/attendance/presentation/pages/placeholder_feature_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/face_enrollment/presentation/cubit/face_enrollment_cubit.dart';
 import '../../features/face_enrollment/presentation/pages/face_enrollment_page.dart';
@@ -114,15 +116,18 @@ final appRouter = GoRouter(
     GoRoute(
       parentNavigatorKey: rootNavigatorKey,
       path: '/attendance/capture',
-      name: 'attendance_capture_placeholder',
+      name: 'attendance_capture',
       builder: (context, state) {
-        final mode = state.uri.queryParameters['mode'] ?? 'check-in';
-        final isOut = mode == 'check-out';
-        return PlaceholderFeaturePage(
-          title: isOut ? 'Absen Pulang' : 'Absen Masuk',
-          description:
-              'Halaman pengambilan GPS, kamera oval, dan pencocokan wajah (M6 / T-301) disiapkan sebagai placeholder navigasi.',
-          icon: isOut ? Icons.logout : Icons.login,
+        final mode = AttendanceMode.fromQuery(
+          state.uri.queryParameters['mode'],
+        );
+        return BlocProvider<AttendanceCaptureCubit>(
+          create: (_) => sl<AttendanceCaptureCubit>(),
+          child: AttendanceCapturePage(
+            mode: mode,
+            permissionService: sl<DevicePermissionService>(),
+            preprocessConfig: sl<PreprocessService>().spec,
+          ),
         );
       },
     ),

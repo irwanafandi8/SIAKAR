@@ -20,6 +20,7 @@ import '../../features/attendance/data/datasources/attendance_remote_datasource.
 import '../../features/attendance/data/repositories/attendance_repository_impl.dart';
 import '../../features/attendance/domain/repositories/attendance_repository.dart';
 import '../../features/attendance/domain/usecases/attendance_usecases.dart';
+import '../../features/attendance/presentation/cubit/attendance_capture_cubit.dart';
 import '../../features/attendance/presentation/cubit/history_cubit.dart';
 import '../../features/attendance/presentation/cubit/today_attendance_cubit.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -109,6 +110,16 @@ Future<void> initInjection() async {
       remoteDataSource: sl<AttendanceRemoteDataSource>(),
     ),
   );
+  sl.registerLazySingleton<AttendanceActionRepository>(
+    () => AttendanceRepositoryImpl(
+      remoteDataSource: sl<AttendanceRemoteDataSource>(),
+    ),
+  );
+  sl.registerLazySingleton<AttendanceLocationProvider>(
+    () => GeolocatorAttendanceLocationProvider(
+      locationService: sl<LocationService>(),
+    ),
+  );
   sl.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(apiClient: sl<ApiClient>()),
   );
@@ -144,6 +155,18 @@ Future<void> initInjection() async {
   );
   sl.registerLazySingleton<GetAttendanceHistoryUseCase>(
     () => GetAttendanceHistoryUseCase(sl<AttendanceRepository>()),
+  );
+  sl.registerLazySingleton<AcquireAttendanceLocationUseCase>(
+    () => AcquireAttendanceLocationUseCase(sl<AttendanceLocationProvider>()),
+  );
+  sl.registerLazySingleton<OpenLocationSettingsUseCase>(
+    () => OpenLocationSettingsUseCase(sl<AttendanceLocationProvider>()),
+  );
+  sl.registerLazySingleton<SubmitAttendanceUseCase>(
+    () => SubmitAttendanceUseCase(
+      sampleExtractor: sl<FaceSampleExtractor>(),
+      actionRepository: sl<AttendanceActionRepository>(),
+    ),
   );
   sl.registerLazySingleton<GetProfileInfoUseCase>(
     () => GetProfileInfoUseCase(
@@ -188,6 +211,14 @@ Future<void> initInjection() async {
   sl.registerFactory<HistoryCubit>(
     () => HistoryCubit(
       getAttendanceHistoryUseCase: sl<GetAttendanceHistoryUseCase>(),
+    ),
+  );
+  sl.registerFactory<AttendanceCaptureCubit>(
+    () => AttendanceCaptureCubit(
+      getTodayAttendanceUseCase: sl<GetTodayAttendanceUseCase>(),
+      acquireLocationUseCase: sl<AcquireAttendanceLocationUseCase>(),
+      submitAttendanceUseCase: sl<SubmitAttendanceUseCase>(),
+      openLocationSettingsUseCase: sl<OpenLocationSettingsUseCase>(),
     ),
   );
   sl.registerFactory<ProfileCubit>(
