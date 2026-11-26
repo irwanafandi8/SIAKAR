@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/ml/liveness_service.dart';
 import '../../domain/entities/attendance_entities.dart';
 import '../../domain/usecases/attendance_usecases.dart';
 import 'attendance_capture_state.dart';
@@ -14,12 +15,14 @@ class AttendanceCaptureCubit extends Cubit<AttendanceCaptureState> {
 
   final GetTodayAttendanceUseCase getTodayAttendanceUseCase;
   final AcquireAttendanceLocationUseCase acquireLocationUseCase;
+  final StartLivenessChallengeUseCase startLivenessChallengeUseCase;
   final SubmitAttendanceUseCase submitAttendanceUseCase;
   final OpenLocationSettingsUseCase openLocationSettingsUseCase;
 
   AttendanceCaptureCubit({
     required this.getTodayAttendanceUseCase,
     required this.acquireLocationUseCase,
+    required this.startLivenessChallengeUseCase,
     required this.submitAttendanceUseCase,
     required this.openLocationSettingsUseCase,
     AttendanceMode initialMode = AttendanceMode.checkIn,
@@ -35,7 +38,7 @@ class AttendanceCaptureCubit extends Cubit<AttendanceCaptureState> {
       final todayInfo = await getTodayAttendanceUseCase();
       offices = todayInfo.locations;
     } catch (_) {
-      // Kegagalan memuat pratinjau kantor tidak boleh menghalangi pengiriman absensi;
+      // Kegagalan memuat pratinjau kantor tidak menghalangi pengiriman absensi;
       // server tetap menjadi otoritas penuh validasi geofence.
     }
 
@@ -62,7 +65,8 @@ class AttendanceCaptureCubit extends Cubit<AttendanceCaptureState> {
           mode: activeMode,
           failure: const DeviceFailure(
             code: 'LOCATION_ERROR',
-            message: 'Gagal mendapatkan lokasi GPS perangkat. Pastikan GPS aktif.',
+            message:
+                'Gagal mendapatkan lokasi GPS perangkat. Pastikan GPS aktif.',
           ),
         ),
       );
@@ -74,20 +78,85 @@ class AttendanceCaptureCubit extends Cubit<AttendanceCaptureState> {
     await openLocationSettingsUseCase();
   }
 
-  /// Proses tangkapan foto kamera -> validasi oval -> embedding TFLite -> kirim ke API B5.
-  /// Tanpa mengirim waktu klien dan tanpa retry otomatis.
-  Future<void> captureAndSubmit({
-    required Uint8List photoBytes,
-    bool livenessPassed = true,
+  /// Langkah 1/2: Ambil frame wajah acuan di dalam oval -> bangkitkan tantangan Liveness L1 acak.
+  Future<void> startLivenessChallenge({
+    required Uint8List baselinePhotoBytes,
+    LivenessChallengeType? forcedType,
   }) async {
     final current = state;
-    if (current is! AttendanceCaptureReady || current.isSubmitting) {
+    if (current is! AttendanceCaptureReady || current.isProcessing) {
       return;
     }
 
     emit(
       current.copyWith(
-        isSubmitting: true,
+        isProcessing: true,
+        clearInlineWarning: true,
+      ),
+    );
+
+    try {
+      final session = await startLivenessChallengeUseCase(
+        baselinePhotoBytes: baselinePhotoBytes,
+        forcedType: forcedType,
+      );
+
+      emit(
+        current.copyWith(
+          livenessSession: session,
+          isProcessing: false,
+          clearInlineWarning: true,
+        ),
+      );
+    } on Failure catch (f) {
+      emit(
+        current.copyWith(
+          isProcessing: false,
+          inlineWarning: f,
+        ),
+      );
+    } catch (_) {
+      emit(
+        current.copyWith(
+          isProcessing: false,
+          inlineWarning: const ValidationFailure(
+            code: 'FACE_NOT_IN_OVAL',
+            message:
+                'Gagal mendeteksi wajah pada bingkai oval. Pastikan wajah terlihat jelas.',
+          ),
+        ),
+      );
+    }
+  }
+
+  /// Ulangi tantangan Liveness L1 dari langkah 1.
+  void resetLivenessChallenge() {
+    final current = state;
+    if (current is AttendanceCaptureReady && !current.isProcessing) {
+      emit(
+        current.copyWith(
+          clearLivenessSession: true,
+          clearInlineWarning: true,
+        ),
+      );
+    }
+  }
+
+  /// Langkah 2/2: Evaluasi tantangan Liveness L1 -> ekstrak embedding TFLite -> kirim ke API B5.
+  /// Menolak di klien bila detektor atau liveness gagal, tanpa retry otomatis.
+  Future<void> completeChallengeAndSubmit({
+    required Uint8List challengePhotoBytes,
+  }) async {
+    final current = state;
+    if (current is! AttendanceCaptureReady ||
+        current.isProcessing ||
+        current.livenessSession == null) {
+      return;
+    }
+
+    emit(
+      current.copyWith(
+        isProcessing: true,
         clearInlineWarning: true,
       ),
     );
@@ -96,8 +165,8 @@ class AttendanceCaptureCubit extends Cubit<AttendanceCaptureState> {
       final result = await submitAttendanceUseCase(
         mode: current.mode,
         position: current.position,
-        photoBytes: photoBytes,
-        livenessPassed: livenessPassed,
+        livenessSession: current.livenessSession!,
+        challengePhotoBytes: challengePhotoBytes,
       );
 
       emit(AttendanceCaptureSuccess(result: result));
@@ -105,7 +174,7 @@ class AttendanceCaptureCubit extends Cubit<AttendanceCaptureState> {
       if (_inlineFrameErrorCodes.contains(f.code)) {
         emit(
           current.copyWith(
-            isSubmitting: false,
+            isProcessing: false,
             inlineWarning: f,
           ),
         );
@@ -127,7 +196,8 @@ class AttendanceCaptureCubit extends Cubit<AttendanceCaptureState> {
           mode: current.mode,
           failure: const ServerFailure(
             code: 'SERVER_ERROR',
-            message: 'Terjadi kesalahan saat memproses absensi. Silakan coba lagi.',
+            message:
+                'Terjadi kesalahan saat memproses absensi. Silakan coba lagi.',
           ),
           lastPosition: current.position,
           offices: current.offices,
@@ -137,7 +207,20 @@ class AttendanceCaptureCubit extends Cubit<AttendanceCaptureState> {
     }
   }
 
-  /// Kembali ke tampilan kamera menggunakan titik GPS terakhir (aksi eksplisit pengguna, bukan retry otomatis).
+  /// Penanganan satu pintu dari tombol kamera sesuai tahap aktif (Langkah 1 vs Langkah 2).
+  Future<void> onCameraFrameCaptured(Uint8List photoBytes) async {
+    final current = state;
+    if (current is! AttendanceCaptureReady || current.isProcessing) {
+      return;
+    }
+    if (!current.hasBaselineChallenge) {
+      await startLivenessChallenge(baselinePhotoBytes: photoBytes);
+    } else {
+      await completeChallengeAndSubmit(challengePhotoBytes: photoBytes);
+    }
+  }
+
+  /// Kembali ke tampilan kamera dengan sesi tantangan Liveness L1 baru (aksi eksplisit pengguna).
   void returnToCamera() {
     final current = state;
     if (current is AttendanceCaptureRejected) {

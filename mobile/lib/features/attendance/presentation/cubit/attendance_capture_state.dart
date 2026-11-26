@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/ml/liveness_service.dart';
 import '../../domain/entities/attendance_entities.dart';
 
 abstract class AttendanceCaptureState extends Equatable {
@@ -36,12 +37,13 @@ class AttendanceCaptureLocationFailed extends AttendanceCaptureState {
   List<Object?> get props => [mode, failure];
 }
 
-/// GPS telah siap; menampilkan kamera + oval panduan untuk mengambil bukti wajah.
+/// GPS telah siap; menampilkan kamera + oval panduan + tahapan Liveness L1.
 class AttendanceCaptureReady extends AttendanceCaptureState {
   final AttendanceGpsPosition position;
   final List<OfficeLocation> offices;
   final NearestOfficePreview? nearestOffice;
-  final bool isSubmitting;
+  final LivenessChallengeSession? livenessSession;
+  final bool isProcessing;
   final Failure? inlineWarning;
 
   const AttendanceCaptureReady({
@@ -49,15 +51,20 @@ class AttendanceCaptureReady extends AttendanceCaptureState {
     required this.position,
     this.offices = const [],
     this.nearestOffice,
-    this.isSubmitting = false,
+    this.livenessSession,
+    this.isProcessing = false,
     this.inlineWarning,
   });
+
+  bool get hasBaselineChallenge => livenessSession != null;
 
   AttendanceCaptureReady copyWith({
     AttendanceGpsPosition? position,
     List<OfficeLocation>? offices,
     NearestOfficePreview? nearestOffice,
-    bool? isSubmitting,
+    LivenessChallengeSession? livenessSession,
+    bool clearLivenessSession = false,
+    bool? isProcessing,
     Failure? inlineWarning,
     bool clearInlineWarning = false,
   }) {
@@ -66,7 +73,10 @@ class AttendanceCaptureReady extends AttendanceCaptureState {
       position: position ?? this.position,
       offices: offices ?? this.offices,
       nearestOffice: nearestOffice ?? this.nearestOffice,
-      isSubmitting: isSubmitting ?? this.isSubmitting,
+      livenessSession: clearLivenessSession
+          ? null
+          : (livenessSession ?? this.livenessSession),
+      isProcessing: isProcessing ?? this.isProcessing,
       inlineWarning:
           clearInlineWarning ? null : (inlineWarning ?? this.inlineWarning),
     );
@@ -78,7 +88,8 @@ class AttendanceCaptureReady extends AttendanceCaptureState {
         position,
         offices,
         nearestOffice,
-        isSubmitting,
+        livenessSession,
+        isProcessing,
         inlineWarning,
       ];
 }
@@ -93,8 +104,7 @@ class AttendanceCaptureSuccess extends AttendanceCaptureState {
   List<Object?> get props => [mode, result];
 }
 
-/// Penolakan bisnis dari server atau kegagalan jaringan saat pengiriman absensi.
-/// Klien menampilkan pesan Bahasa Indonesia yang sesuai tanpa retry otomatis.
+/// Penolakan liveness L1 di klien, penolakan bisnis server, atau kegagalan jaringan.
 class AttendanceCaptureRejected extends AttendanceCaptureState {
   final Failure failure;
   final AttendanceGpsPosition lastPosition;

@@ -8,8 +8,10 @@ import 'package:siakar_mobile/app/di/injection.dart';
 import 'package:siakar_mobile/core/device/permission_service.dart';
 import 'package:siakar_mobile/core/error/error_messages.dart';
 import 'package:siakar_mobile/core/error/failures.dart';
+import 'package:siakar_mobile/core/ml/detector_service.dart';
 import 'package:siakar_mobile/core/ml/embedding_service.dart';
 import 'package:siakar_mobile/core/ml/face_oval_validator.dart';
+import 'package:siakar_mobile/core/ml/liveness_service.dart';
 import 'package:siakar_mobile/core/ml/preprocess.dart';
 import 'package:siakar_mobile/design/app_theme.dart';
 import 'package:siakar_mobile/design/widgets/face_oval_camera_view.dart';
@@ -135,6 +137,61 @@ class _FakeActionRepository implements AttendanceActionRepository {
   }
 }
 
+/// Detektor uji sekuensial yang mengembalikan pergeseran wajah realistis antar-frame untuk alur M6.
+class _AlternatingDetectorService implements DetectorService {
+  int _callCount = 0;
+
+  @override
+  double get threshold => 0.52;
+
+  @override
+  bool get isInitialized => true;
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Float32List preprocessForDetector(img.Image rawImage) =>
+      Float32List(1 * 64 * 64 * 3);
+
+  @override
+  Future<FaceDetectionBox> detect(img.Image rawImage) async {
+    _callCount++;
+    final isEven = _callCount.isEven;
+    return FaceDetectionBox(
+      faceScore: 0.99,
+      cx: isEven ? 0.54 : 0.49,
+      cy: isEven ? 0.53 : 0.48,
+      width: isEven ? 0.66 : 0.62,
+      height: isEven ? 0.66 : 0.62,
+      threshold: 0.52,
+    );
+  }
+
+  @override
+  Future<FaceDetectionBox> detectFromBytes(Uint8List imageBytes) async {
+    final decoded = img.decodeImage(imageBytes)!;
+    return detect(decoded);
+  }
+
+  @override
+  Future<FaceDetectionBox> runOnPreprocessedTensor(
+    Float32List inputNHWC64,
+  ) async {
+    return const FaceDetectionBox(
+      faceScore: 0.99,
+      cx: 0.5,
+      cy: 0.5,
+      width: 0.64,
+      height: 0.64,
+      threshold: 0.52,
+    );
+  }
+
+  @override
+  void dispose() {}
+}
+
 class _FakeEmbeddingService implements EmbeddingService {
   @override
   bool get isInitialized => true;
@@ -199,10 +256,11 @@ class _FakePermissionService implements DevicePermissionService {
 }
 
 class _FakeCameraAdapter implements FaceCameraControllerAdapter {
-  final Uint8List captureBytes;
+  final List<Uint8List> frames;
+  int _idx = 0;
   bool _initialized = false;
 
-  _FakeCameraAdapter({required this.captureBytes});
+  _FakeCameraAdapter({required this.frames});
 
   @override
   bool get isInitialized => _initialized;
@@ -217,7 +275,9 @@ class _FakeCameraAdapter implements FaceCameraControllerAdapter {
 
   @override
   Future<CapturedPhotoData> takePicture() async {
-    return CapturedPhotoData(bytes: captureBytes, filePath: 'proof.png');
+    final bytes = frames[_idx % frames.length];
+    _idx++;
+    return CapturedPhotoData(bytes: bytes, filePath: 'proof_$_idx.png');
   }
 
   @override
@@ -239,18 +299,44 @@ Uint8List _encodeBlankWallPng() {
 void main() {
   late PreprocessService preprocessService;
   late FaceSampleExtractor sampleExtractor;
-  late Uint8List validFacePng;
+  late LivenessService livenessService;
+  late Uint8List validFacePng1;
+  late Uint8List validFacePng2;
 
   setUpAll(() {
     preprocessService = PreprocessService.defaultConfig();
+    livenessService = ChallengeResponseLivenessService();
     sampleExtractor = MlFaceSampleExtractor(
       ovalValidator: DefaultFaceOvalValidator(
         preprocessService: preprocessService,
+        detectorService: _AlternatingDetectorService(),
       ),
       embeddingService: _FakeEmbeddingService(),
     );
-    validFacePng = File('test/golden/sample_0.png').readAsBytesSync();
+    validFacePng1 = File('test/golden/sample_0.png').readAsBytesSync();
+    validFacePng2 = File('test/golden/sample_1.png').readAsBytesSync();
   });
+
+  AttendanceCaptureCubit buildCubit({
+    required _FakeTodayRepo todayRepo,
+    required _FakeLocationProvider locationProvider,
+    required _FakeActionRepository actionRepo,
+  }) {
+    return AttendanceCaptureCubit(
+      getTodayAttendanceUseCase: GetTodayAttendanceUseCase(todayRepo),
+      acquireLocationUseCase: AcquireAttendanceLocationUseCase(locationProvider),
+      startLivenessChallengeUseCase: StartLivenessChallengeUseCase(
+        sampleExtractor: sampleExtractor,
+        livenessService: livenessService,
+      ),
+      submitAttendanceUseCase: SubmitAttendanceUseCase(
+        sampleExtractor: sampleExtractor,
+        livenessService: livenessService,
+        actionRepository: actionRepo,
+      ),
+      openLocationSettingsUseCase: OpenLocationSettingsUseCase(locationProvider),
+    );
+  }
 
   group('M6 (T-301) — AttendanceCaptureCubit & UseCases (Check-In / Check-Out & Error States)', () {
     late _FakeTodayRepo todayRepo;
@@ -262,14 +348,10 @@ void main() {
       todayRepo = _FakeTodayRepo();
       locationProvider = _FakeLocationProvider();
       actionRepo = _FakeActionRepository();
-      cubit = AttendanceCaptureCubit(
-        getTodayAttendanceUseCase: GetTodayAttendanceUseCase(todayRepo),
-        acquireLocationUseCase: AcquireAttendanceLocationUseCase(locationProvider),
-        submitAttendanceUseCase: SubmitAttendanceUseCase(
-          sampleExtractor: sampleExtractor,
-          actionRepository: actionRepo,
-        ),
-        openLocationSettingsUseCase: OpenLocationSettingsUseCase(locationProvider),
+      cubit = buildCubit(
+        todayRepo: todayRepo,
+        locationProvider: locationProvider,
+        actionRepo: actionRepo,
       );
     });
 
@@ -277,7 +359,7 @@ void main() {
       await cubit.close();
     });
 
-    test('Alur Check-In sukses: ambil GPS + preview kantor terdekat -> embedding 128-d -> hasil hadir',
+    test('Alur Check-In sukses: GPS -> Liveness L1 -> embedding 128-d -> hasil hadir',
         () async {
       await cubit.prepareCapture(AttendanceMode.checkIn);
       expect(cubit.state, isA<AttendanceCaptureReady>());
@@ -285,7 +367,9 @@ void main() {
       expect(ready.nearestOffice?.office.nama, equals('Kantor Pusat'));
       expect(ready.nearestOffice!.distanceMeters, closeTo(0.0, 1.0));
 
-      await cubit.captureAndSubmit(photoBytes: validFacePng);
+      await cubit.startLivenessChallenge(baselinePhotoBytes: validFacePng1);
+      await cubit.completeChallengeAndSubmit(challengePhotoBytes: validFacePng2);
+
       expect(cubit.state, isA<AttendanceCaptureSuccess>());
       final success = (cubit.state as AttendanceCaptureSuccess).result;
       expect(success.mode, equals(AttendanceMode.checkIn));
@@ -299,7 +383,8 @@ void main() {
     test('Alur Check-Out sukses mengirim mode checkOut dan mencatat jam pulang server',
         () async {
       await cubit.prepareCapture(AttendanceMode.checkOut);
-      await cubit.captureAndSubmit(photoBytes: validFacePng);
+      await cubit.startLivenessChallenge(baselinePhotoBytes: validFacePng1);
+      await cubit.completeChallengeAndSubmit(challengePhotoBytes: validFacePng2);
 
       expect(cubit.state, isA<AttendanceCaptureSuccess>());
       final success = (cubit.state as AttendanceCaptureSuccess).result;
@@ -310,7 +395,6 @@ void main() {
 
     test('Klien TIDAK memblokir saat jarak jauh; server menolak OUT_OF_RADIUS tanpa retry otomatis',
         () async {
-      // Posisi jauh dari kantor -> klien tetap mengizinkan kirim, server mengembalikan OUT_OF_RADIUS
       locationProvider.positionToReturn = const AttendanceGpsPosition(
         latitude: -6.4000,
         longitude: 108.4000,
@@ -321,14 +405,13 @@ void main() {
       );
 
       await cubit.prepareCapture(AttendanceMode.checkIn);
-      expect(cubit.state, isA<AttendanceCaptureReady>());
+      await cubit.startLivenessChallenge(baselinePhotoBytes: validFacePng1);
+      await cubit.completeChallengeAndSubmit(challengePhotoBytes: validFacePng2);
 
-      await cubit.captureAndSubmit(photoBytes: validFacePng);
       expect(cubit.state, isA<AttendanceCaptureRejected>());
       final rejected = cubit.state as AttendanceCaptureRejected;
       expect(rejected.failure, isA<OutOfRadiusFailure>());
       expect((rejected.failure as OutOfRadiusFailure).distanceMeter, closeTo(284.6, 1e-6));
-      // Pastikan TIDAK ada retry otomatis
       expect(actionRepo.submitCallCount, equals(1));
     });
 
@@ -357,7 +440,10 @@ void main() {
       for (final expectedFailure in failureCases) {
         actionRepo.failureToThrow = expectedFailure;
         await cubit.prepareCapture(AttendanceMode.checkIn);
-        await cubit.captureAndSubmit(photoBytes: validFacePng);
+        await cubit.startLivenessChallenge(baselinePhotoBytes: validFacePng1);
+        await cubit.completeChallengeAndSubmit(
+          challengePhotoBytes: validFacePng2,
+        );
 
         expect(cubit.state, isA<AttendanceCaptureRejected>());
         final rejected = cubit.state as AttendanceCaptureRejected;
@@ -390,7 +476,7 @@ void main() {
     test('Foto dinding polos (tanpa wajah di oval) memberi peringatan inline tanpa kehilangan titik GPS',
         () async {
       await cubit.prepareCapture(AttendanceMode.checkIn);
-      await cubit.captureAndSubmit(photoBytes: _encodeBlankWallPng());
+      await cubit.onCameraFrameCaptured(_encodeBlankWallPng());
 
       expect(cubit.state, isA<AttendanceCaptureReady>());
       final ready = cubit.state as AttendanceCaptureReady;
@@ -400,19 +486,15 @@ void main() {
   });
 
   group('M6 (T-301) — Widget Test Halaman Absensi & DI', () {
-    testWidgets('AttendanceCapturePage menampilkan izin kontekstual -> kamera oval -> hasil sukses & penolakan',
+    testWidgets('AttendanceCapturePage menampilkan izin kontekstual -> kamera oval -> liveness 1/2 & 2/2 -> hasil',
         (tester) async {
       final todayRepo = _FakeTodayRepo();
       final locationProvider = _FakeLocationProvider();
       final actionRepo = _FakeActionRepository();
-      final cubit = AttendanceCaptureCubit(
-        getTodayAttendanceUseCase: GetTodayAttendanceUseCase(todayRepo),
-        acquireLocationUseCase: AcquireAttendanceLocationUseCase(locationProvider),
-        submitAttendanceUseCase: SubmitAttendanceUseCase(
-          sampleExtractor: sampleExtractor,
-          actionRepository: actionRepo,
-        ),
-        openLocationSettingsUseCase: OpenLocationSettingsUseCase(locationProvider),
+      final cubit = buildCubit(
+        todayRepo: todayRepo,
+        locationProvider: locationProvider,
+        actionRepo: actionRepo,
       );
 
       final permService = _FakePermissionService(
@@ -429,7 +511,9 @@ void main() {
               mode: AttendanceMode.checkIn,
               permissionService: permService,
               preprocessConfig: preprocessService.spec,
-              cameraAdapter: _FakeCameraAdapter(captureBytes: validFacePng),
+              cameraAdapter: _FakeCameraAdapter(
+                frames: [validFacePng1, validFacePng2],
+              ),
             ),
           ),
         ),
@@ -446,16 +530,20 @@ void main() {
       await tester.tap(find.text('Lanjutkan & Izinkan'));
       await tester.pumpAndSettle();
 
-      // 3. Kartu GPS & tombol Konfirmasi Absen Masuk tampil
+      // 3. Kartu GPS & Langkah 1/2 tampil
       expect(find.textContaining('Kantor Pusat'), findsOneWidget);
-      expect(find.text('Konfirmasi Absen Masuk'), findsOneWidget);
+      expect(find.text('Mulai Tantangan Liveness (1/2)'), findsOneWidget);
 
-      // 4. Uji skenario wajah tidak cocok terlebih dahulu -> tampil layar Ditolak beserta skor
+      // 4. Selesaikan Langkah 1 & uji skenario wajah tidak cocok di Langkah 2
       actionRepo.failureToThrow = FaceMismatchFailure(
         message: ErrorMessages.fromCode('FACE_MISMATCH'),
         similarity: 0.1123,
       );
-      await tester.tap(find.text('Konfirmasi Absen Masuk'));
+      await tester.tap(find.text('Mulai Tantangan Liveness (1/2)'));
+      await tester.pumpAndSettle();
+      expect(find.text('Konfirmasi Absen Masuk (2/2)'), findsOneWidget);
+
+      await tester.tap(find.text('Konfirmasi Absen Masuk (2/2)'));
       await tester.pumpAndSettle();
 
       expect(find.text('Absen Masuk Ditolak'), findsOneWidget);
@@ -467,7 +555,9 @@ void main() {
       await tester.tap(find.text('Ambil Ulang Foto Wajah'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Konfirmasi Absen Masuk'));
+      await tester.tap(find.text('Mulai Tantangan Liveness (1/2)'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Konfirmasi Absen Masuk (2/2)'));
       await tester.pumpAndSettle();
 
       expect(find.text('Absen Masuk Berhasil'), findsOneWidget);

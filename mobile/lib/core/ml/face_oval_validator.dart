@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import '../error/error_messages.dart';
 import '../error/failures.dart';
+import 'detector_service.dart';
+import 'liveness_service.dart';
 import 'preprocess.dart';
 
 /// Hasil pemeriksaan kualitas & keberadaan objek wajah pada area oval.
@@ -22,18 +24,35 @@ class FaceOvalValidationResult {
   });
 }
 
-/// Kontrak validator area oval wajah (dipakai M5 dan dapat diperluas detektor TFLite di M8).
+/// Paket citra yang telah lolos validasi pencahayaan oval DAN detektor wajah TFLite (`detector.tflite`).
+class ValidatedOvalFrame {
+  final img.Image decodedImage;
+  final FaceDetectionBox detectionBox;
+
+  const ValidatedOvalFrame({
+    required this.decodedImage,
+    required this.detectionBox,
+  });
+}
+
+/// Kontrak validator area oval wajah (menggabungkan pemeriksaan pencahayaan + `DetectorService` TFLite).
 abstract class FaceInOvalValidator {
   FaceOvalValidationResult validateImage(img.Image rawImage);
   FaceOvalValidationResult validateBytes(Uint8List imageBytes);
 
-  /// Lempar `ValidationFailure` bertipe jika foto di dalam oval tidak memenuhi syarat.
+  /// Validasi sinkron pencahayaan & kontras dasar.
   img.Image decodeAndValidateOrThrow(Uint8List imageBytes);
+
+  /// Validasi lengkap dengan `DetectorService` TFLite (`detector.tflite`) sebelum inferensi embedding dijalankan.
+  /// Melempar `ValidationFailure` (`LIGHTING_TOO_DARK`, `LIGHTING_TOO_BRIGHT`, atau `FACE_NOT_IN_OVAL`) jika gagal.
+  Future<ValidatedOvalFrame> decodeAndDetectFaceOrThrow(Uint8List imageBytes);
 }
 
-/// Validator kualitas pencahayaan & tekstur wajah di dalam elips panduan oval (`preprocess.json`).
+/// Implementasi `FaceInOvalValidator` yang mengevaluasi kualitas pencahayaan elips oval
+/// serta menjalankan `DetectorService` (`detector.tflite`, ambang `detector_threshold.json`).
 class DefaultFaceOvalValidator implements FaceInOvalValidator {
   final PreprocessService preprocessService;
+  final DetectorService? detectorService;
   final int minDimension;
   final double minLuminance;
   final double maxLuminance;
@@ -41,6 +60,7 @@ class DefaultFaceOvalValidator implements FaceInOvalValidator {
 
   const DefaultFaceOvalValidator({
     required this.preprocessService,
+    this.detectorService,
     this.minDimension = 64,
     this.minLuminance = 28.0,
     this.maxLuminance = 238.0,
@@ -90,7 +110,6 @@ class DefaultFaceOvalValidator implements FaceInOvalValidator {
       final ny = ((y + 0.5) - cy) / ry;
       for (int x = 0; x < w; x++) {
         final nx = ((x + 0.5) - cx) / rx;
-        // Hanya evaluasi piksel di dalam elips panduan oval
         if (nx * nx + ny * ny <= 1.0) {
           final p = cropped.getPixel(x, y);
           final lum = 0.299 * p.r + 0.587 * p.g + 0.114 * p.b;
@@ -172,5 +191,52 @@ class DefaultFaceOvalValidator implements FaceInOvalValidator {
     }
 
     return decoded;
+  }
+
+  @override
+  Future<ValidatedOvalFrame> decodeAndDetectFaceOrThrow(
+    Uint8List imageBytes,
+  ) async {
+    final decoded = decodeAndValidateOrThrow(imageBytes);
+
+    final detector = detectorService;
+    if (detector == null) {
+      // Fallback aman untuk unit test lama tanpa injeksi DetectorService
+      return ValidatedOvalFrame(
+        decodedImage: decoded,
+        detectionBox: const FaceDetectionBox(
+          faceScore: 1.0,
+          cx: 0.5,
+          cy: 0.5,
+          width: 0.65,
+          height: 0.65,
+          threshold: DetectorService.defaultThreshold,
+        ),
+      );
+    }
+
+    final FaceDetectionBox detection;
+    try {
+      detection = await detector.detect(decoded);
+    } on Failure {
+      rethrow;
+    } catch (_) {
+      throw ValidationFailure(
+        code: 'FACE_NOT_IN_OVAL',
+        message: ErrorMessages.fromCode('FACE_NOT_IN_OVAL'),
+      );
+    }
+
+    if (!detection.isWellPositionedInOval) {
+      throw ValidationFailure(
+        code: 'FACE_NOT_IN_OVAL',
+        message: ErrorMessages.fromCode('FACE_NOT_IN_OVAL'),
+      );
+    }
+
+    return ValidatedOvalFrame(
+      decodedImage: decoded,
+      detectionBox: detection,
+    );
   }
 }

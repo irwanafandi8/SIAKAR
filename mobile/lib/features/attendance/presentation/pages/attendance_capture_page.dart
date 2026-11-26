@@ -262,6 +262,28 @@ class _AttendanceCaptureBodyState extends State<_AttendanceCaptureBody> {
   ) {
     final cubit = context.read<AttendanceCaptureCubit>();
     final preview = state.nearestOffice;
+    final hasChallenge = state.hasBaselineChallenge;
+
+    final String instructionText;
+    if (state.isProcessing) {
+      instructionText = hasChallenge
+          ? 'Memverifikasi liveness, wajah, & lokasi...'
+          : 'Mendeteksi wajah di dalam bingkai oval...';
+    } else if (hasChallenge) {
+      instructionText = state.livenessSession!.instructionText;
+    } else {
+      instructionText =
+          'Langkah 1/2: Posisikan wajah lurus di dalam bingkai oval';
+    }
+
+    final String buttonLabel;
+    if (!hasChallenge) {
+      buttonLabel = 'Mulai Tantangan Liveness (1/2)';
+    } else {
+      buttonLabel = state.mode == AttendanceMode.checkOut
+          ? 'Konfirmasi Absen Pulang (2/2)'
+          : 'Konfirmasi Absen Masuk (2/2)';
+    }
 
     return Padding(
       padding: const EdgeInsets.all(Tk.spacing16),
@@ -269,6 +291,50 @@ class _AttendanceCaptureBodyState extends State<_AttendanceCaptureBody> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildGpsInfoCard(context, state, preview),
+          if (hasChallenge) ...[
+            const SizedBox(height: Tk.spacing8),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Tk.spacing12,
+                vertical: Tk.spacing8,
+              ),
+              decoration: BoxDecoration(
+                color: Tk.hadirBg,
+                borderRadius: BorderRadius.circular(Tk.radiusInput),
+                border: Border.all(color: Tk.primary.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.verified_outlined,
+                    color: Tk.hadirText,
+                    size: 18,
+                  ),
+                  const SizedBox(width: Tk.spacing8),
+                  Expanded(
+                    child: Text(
+                      'Langkah 2/2 (${state.livenessSession!.type.shortLabel}): Lakukan instruksi di kamera lalu tekan Konfirmasi.',
+                      style: const TextStyle(
+                        color: Tk.hadirText,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(Tk.minTouchTarget, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    onPressed: state.isProcessing
+                        ? null
+                        : cubit.resetLivenessChallenge,
+                    child: const Text('Ulangi'),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (state.inlineWarning != null) ...[
             const SizedBox(height: Tk.spacing8),
             Container(
@@ -305,16 +371,12 @@ class _AttendanceCaptureBodyState extends State<_AttendanceCaptureBody> {
             child: FaceOvalCameraView(
               preprocessConfig: widget.preprocessConfig,
               cameraAdapter: widget.cameraAdapter,
-              instructionText: state.isSubmitting
-                  ? 'Memverifikasi wajah & lokasi di server...'
-                  : 'Posisikan wajah di dalam bingkai oval',
-              captureButtonLabel: state.mode == AttendanceMode.checkOut
-                  ? 'Konfirmasi Absen Pulang'
-                  : 'Konfirmasi Absen Masuk',
-              isBusy: state.isSubmitting,
-              isFrameValid: !state.isSubmitting,
+              instructionText: instructionText,
+              captureButtonLabel: buttonLabel,
+              isBusy: state.isProcessing,
+              isFrameValid: !state.isProcessing,
               onPhotoCaptured: (photo) {
-                cubit.captureAndSubmit(photoBytes: photo.bytes);
+                cubit.onCameraFrameCaptured(photo.bytes);
               },
             ),
           ),
@@ -383,7 +445,7 @@ class _AttendanceCaptureBodyState extends State<_AttendanceCaptureBody> {
                 minWidth: Tk.minTouchTarget,
                 minHeight: Tk.minTouchTarget,
               ),
-              onPressed: state.isSubmitting
+              onPressed: state.isProcessing
                   ? null
                   : () => context
                       .read<AttendanceCaptureCubit>()

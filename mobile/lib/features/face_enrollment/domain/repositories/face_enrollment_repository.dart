@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import '../../../../core/ml/liveness_service.dart';
 import '../entities/face_enrollment_entities.dart';
 
 /// Kontrak repositori komunikasi API registrasi wajah (GET /face/status & POST /face/enroll).
@@ -13,8 +14,11 @@ abstract class FaceEnrollmentRepository {
   });
 }
 
-/// Kontrak ekstraksi sampel wajah di perangkat (validasi oval + TFLite 128-d embedding).
+/// Kontrak ekstraksi sampel wajah di perangkat (detektor TFLite oval + TFLite 128-d embedding).
 abstract class FaceSampleExtractor {
+  /// Jalankan detektor wajah di area oval tanpa menjalankan model embedding.
+  Future<FaceDetectionBox> detectFaceInOval(Uint8List photoBytes);
+
   Future<CapturedFaceSample> extractSample({
     required Uint8List photoBytes,
     required String poseLabel,

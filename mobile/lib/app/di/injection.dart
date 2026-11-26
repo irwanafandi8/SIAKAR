@@ -2,8 +2,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import '../../core/device/location_service.dart';
 import '../../core/device/permission_service.dart';
+import '../../core/ml/detector_service.dart';
 import '../../core/ml/embedding_service.dart';
 import '../../core/ml/face_oval_validator.dart';
+import '../../core/ml/liveness_service.dart';
 import '../../core/ml/preprocess.dart';
 import '../../core/network/api_client.dart';
 import '../../features/face_enrollment/data/datasources/face_enrollment_remote_datasource.dart';
@@ -62,9 +64,20 @@ Future<void> initInjection() async {
     ),
   );
 
+  sl.registerLazySingleton<DetectorService>(
+    () => TfliteDetectorService(
+      preprocessService: sl<PreprocessService>(),
+    ),
+  );
+
+  sl.registerLazySingleton<LivenessService>(
+    () => ChallengeResponseLivenessService(),
+  );
+
   sl.registerLazySingleton<FaceInOvalValidator>(
     () => DefaultFaceOvalValidator(
       preprocessService: sl<PreprocessService>(),
+      detectorService: sl<DetectorService>(),
     ),
   );
 
@@ -162,9 +175,16 @@ Future<void> initInjection() async {
   sl.registerLazySingleton<OpenLocationSettingsUseCase>(
     () => OpenLocationSettingsUseCase(sl<AttendanceLocationProvider>()),
   );
+  sl.registerLazySingleton<StartLivenessChallengeUseCase>(
+    () => StartLivenessChallengeUseCase(
+      sampleExtractor: sl<FaceSampleExtractor>(),
+      livenessService: sl<LivenessService>(),
+    ),
+  );
   sl.registerLazySingleton<SubmitAttendanceUseCase>(
     () => SubmitAttendanceUseCase(
       sampleExtractor: sl<FaceSampleExtractor>(),
+      livenessService: sl<LivenessService>(),
       actionRepository: sl<AttendanceActionRepository>(),
     ),
   );
@@ -217,6 +237,7 @@ Future<void> initInjection() async {
     () => AttendanceCaptureCubit(
       getTodayAttendanceUseCase: sl<GetTodayAttendanceUseCase>(),
       acquireLocationUseCase: sl<AcquireAttendanceLocationUseCase>(),
+      startLivenessChallengeUseCase: sl<StartLivenessChallengeUseCase>(),
       submitAttendanceUseCase: sl<SubmitAttendanceUseCase>(),
       openLocationSettingsUseCase: sl<OpenLocationSettingsUseCase>(),
     ),

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:equatable/equatable.dart';
+import '../../../../core/ml/liveness_service.dart';
 
 /// Entitas status registrasi wajah karyawan dari GET /api/v1/face/status.
 class FaceStatusEntity extends Equatable {
@@ -21,16 +22,24 @@ class CapturedFaceSample extends Equatable {
   final List<double> embedding;
   final Uint8List photoBytes;
   final String? filePath;
+  final FaceDetectionBox? detectionBox;
 
   const CapturedFaceSample({
     required this.poseLabel,
     required this.embedding,
     required this.photoBytes,
     this.filePath,
+    this.detectionBox,
   });
 
   @override
-  List<Object?> get props => [poseLabel, embedding, photoBytes.length, filePath];
+  List<Object?> get props => [
+        poseLabel,
+        embedding,
+        photoBytes.length,
+        filePath,
+        detectionBox,
+      ];
 }
 
 /// Hasil pendaftaran wajah ke POST /api/v1/face/enroll.

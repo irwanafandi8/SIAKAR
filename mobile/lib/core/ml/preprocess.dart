@@ -122,6 +122,14 @@ class PreprocessService {
     return PreprocessService.fromSpec(const PreprocessConfig());
   }
 
+  /// Salin konfigurasi praproses D-32 yang sama persis dengan ukuran input berbeda
+  /// (mis. `inputSize: 64` untuk `detector.tflite` sesuai ML_SPEC §3.3 & §4).
+  PreprocessService withInputSize(int targetInputSize) {
+    final updatedMap = Map<String, dynamic>.from(config)
+      ..['input_size'] = targetInputSize;
+    return PreprocessService(updatedMap);
+  }
+
   /// Muat konfigurasi dari `assets/models/preprocess.json`.
   static Future<PreprocessService> fromAsset([
     String path = defaultAssetPath,

@@ -4,12 +4,14 @@ import '../../../../core/error/error_messages.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/ml/embedding_service.dart';
 import '../../../../core/ml/face_oval_validator.dart';
+import '../../../../core/ml/liveness_service.dart';
 import '../../domain/entities/face_enrollment_entities.dart';
 import '../../domain/repositories/face_enrollment_repository.dart';
 
-/// Implementasi ekstraktor sampel wajah di perangkat (M3 + M5):
-/// 1. Dekode & validasi kualitas wajah di dalam oval panduan (`FaceInOvalValidator`).
-/// 2. Ekstrak embedding 128-d L2-normalized (`EmbeddingService` / TFLite).
+/// Implementasi ekstraktor sampel wajah di perangkat (M3 + M5 + M8):
+/// 1. Dekode, validasi pencahayaan, & jalankan `DetectorService` TFLite (`detector.tflite`)
+///    untuk memastikan ada wajah valid di dalam bingkai oval SEBELUM inferensi embedding dijalankan.
+/// 2. Ekstrak embedding 128-d L2-normalized (`EmbeddingService` / `siakar_embedding.tflite`).
 /// 3. Pastikan ukuran berkas foto referensi <= 1.8 MB (batas API 2 MB di API.md §3.2).
 class MlFaceSampleExtractor implements FaceSampleExtractor {
   static const int _maxPhotoBytes = 1800 * 1024;
@@ -17,10 +19,31 @@ class MlFaceSampleExtractor implements FaceSampleExtractor {
   final FaceInOvalValidator ovalValidator;
   final EmbeddingService embeddingService;
 
-  const MlFaceSampleExtractor({
+  Uint8List? _lastValidatedBytes;
+  ValidatedOvalFrame? _lastValidatedFrame;
+
+  MlFaceSampleExtractor({
     required this.ovalValidator,
     required this.embeddingService,
   });
+
+  Future<ValidatedOvalFrame> _validateCached(Uint8List photoBytes) async {
+    if (identical(photoBytes, _lastValidatedBytes) &&
+        _lastValidatedFrame != null) {
+      return _lastValidatedFrame!;
+    }
+    final validated = await ovalValidator.decodeAndDetectFaceOrThrow(photoBytes);
+    _lastValidatedBytes = photoBytes;
+    _lastValidatedFrame = validated;
+    return validated;
+  }
+
+  /// Validasi keberadaan & kotak wajah `[face_score, cx, cy, w, h]` di area oval tanpa menjalankan embedding.
+  @override
+  Future<FaceDetectionBox> detectFaceInOval(Uint8List photoBytes) async {
+    final validated = await _validateCached(photoBytes);
+    return validated.detectionBox;
+  }
 
   @override
   Future<CapturedFaceSample> extractSample({
@@ -28,7 +51,8 @@ class MlFaceSampleExtractor implements FaceSampleExtractor {
     required String poseLabel,
     String? filePath,
   }) async {
-    final decoded = ovalValidator.decodeAndValidateOrThrow(photoBytes);
+    final validated = await _validateCached(photoBytes);
+    final decoded = validated.decodedImage;
 
     final List<double> embedding;
     try {
@@ -49,6 +73,7 @@ class MlFaceSampleExtractor implements FaceSampleExtractor {
       embedding: embedding,
       photoBytes: normalizedPhotoBytes,
       filePath: filePath,
+      detectionBox: validated.detectionBox,
     );
   }
 
