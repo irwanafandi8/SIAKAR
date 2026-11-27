@@ -21,20 +21,24 @@ cd mobile
 flutter pub get
 flutter analyze
 flutter test
-flutter run          # sambungkan perangkat Android
+# Emulator Android (default http://10.0.2.2:8000/api/v1):
+flutter run
+# Ponsel Android fisik di jaringan Wi-Fi yang sama:
+flutter run --dart-define=API_BASE_URL=http://<IP_LAPTOP>:8000/api/v1
 ```
 
 ### Laravel (admin/)
 ```bash
 cd admin
-cp .env.example .env
+cp .env.example .env   # Sudah menyertakan CACHE_STORE=file & FACE_SIMILARITY_THRESHOLD=0.2167
 composer install
 php artisan key:generate
 # Edit .env: DB_DATABASE, DB_USERNAME, DB_PASSWORD
 php artisan migrate --seed
-php artisan serve    # API lokal di http://127.0.0.1:8000
+php artisan config:clear
+php artisan serve --host=0.0.0.0 --port=8000   # Web Admin: http://127.0.0.1:8000/admin/login
 # Asset admin:
-npm install && npm run dev
+npm install && npm run build
 ```
 
 ### ML (ml/)
@@ -70,6 +74,7 @@ Lihat `docs/project-kit/` — baca berurutan:
 5. `ML_SPEC.md` — spesifikasi model AI
 6. `AGENTS.md` — aturan untuk AI coding agent
 7. `TASKS.md` — backlog 4 minggu
+8. `DEMO_CHECKLIST.md` — hasil verifikasi akhir & panduan langkah-demi-langkah gladi 8 skenario demo (`PRD.md` §8)
 
 ## Aturan Penting
 

@@ -19,19 +19,19 @@ Format tugas: `ID` · jalur · deskripsi · **Selesai bila** (kriteria yang dapa
 
 | ID    | Jalur | Tugas                                                                                                  | Selesai bila                                                                       |
 | ----- | ----- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| T-101 | ALL   | Buat monorepo (`mobile/ admin/ ml/ docs/`), `.gitignore` (data, `.env`, venv), salin AGENTS.md ke root | Repo bisa di-clone; struktur sesuai DESIGN §4                                      |
-| T-102 | ML    | Siapkan venv Python + `requirements.txt` (TensorFlow versi yang cocok dengan Python), uji instalasi    | `python -c "import tensorflow"` jalan; versi tercatat                              |
+| T-101 | ALL   | ✅ Buat monorepo (`mobile/ admin/ ml/ docs/`), `.gitignore` (data, `.env`, venv), salin AGENTS.md ke root | Repo bisa di-clone; struktur sesuai DESIGN §4 (Selesai)                            |
+| T-102 | ML    | ✅ Siapkan venv Python + `requirements.txt` (TensorFlow versi yang cocok dengan Python), uji instalasi    | `python -c "import tensorflow"` jalan; versi tercatat (Selesai)                    |
 | T-103 | ML    | ✅ Unduh/siapkan subset DigiFace-1M, baca `LICENSE`, catat sitasi                                      | Skrip penyiapan siap; lisensi & sitasi dicatat di `ml/README.md` (Selesai kode)    |
-| T-104 | ML    | Tulis `preprocess.py` + `preprocess.json` + tes unit                                                   | Tes lulus; satu fungsi praproses                                                   |
+| T-104 | ML    | ✅ Tulis `preprocess.py` + `preprocess.json` + tes unit                                                | Tes lulus; satu fungsi praproses sesuai kontrak D-32 (Selesai)                     |
 | T-105 | ML    | ✅ Skrip split per identitas (A/B/C) + pasangan verifikasi, seed dikunci                               | `split.json`, `pairs_val.json`, `pairs_test.json` stabil lintas run (Pytest lulus) |
 | T-106 | ML    | ✅ Baseline klasik HOG/LBP + evaluasi §6                                                               | Pipeline HOG/LBP + CSV/PNG metrik siap & unit test lulus (Siap run manual)         |
 | T-107 | ML    | ✅ **Uji 1 epoch** CNN pada subset kecil; ukur waktu; putuskan `n_identities` dan ukuran input         | CNN, `tf.data`, & benchmark siap (Pytest 1-batch lulus; jalankan manual untuk D-46) |
 | T-108 | ML    | ✅ Cari sumber data non-wajah (detektor) dan data liveness + lisensi                                   | Daftar sumber & lisensi tercatat di `ml/README.md` & `DECISIONS.md` (`Q-2` terjawab) |
-| T-111 | BE    | Proyek Laravel, koneksi MySQL, timezone Asia/Jakarta, Sanctum                                          | `php artisan migrate` jalan                                                        |
-| T-112 | BE    | Migrasi semua tabel (DESIGN §5), model, seeder demo                                                    | `migrate --seed` menghasilkan data demo                                            |
-| T-113 | BE    | `ApiResponse`, `/auth/login` (+device binding), `/auth/logout`, `/me`                                  | Feature test auth lulus                                                            |
-| T-121 | MOB   | Proyek Flutter, struktur Clean Architecture, DI, router, tema dari token                               | `flutter run` menampilkan layar login bertema                                      |
-| T-122 | MOB   | Dio client + interceptor + pemetaan error; layar Login terhubung API                                   | Login berhasil ke API lokal                                                        |
+| T-111 | BE    | ✅ Proyek Laravel, koneksi MySQL, timezone Asia/Jakarta, Sanctum                                       | `php artisan migrate` jalan (Selesai)                                              |
+| T-112 | BE    | ✅ Migrasi semua tabel (DESIGN §5), model, seeder demo                                                 | `migrate --seed` menghasilkan data demo (Selesai)                                  |
+| T-113 | BE    | ✅ `ApiResponse`, `/auth/login` (+device binding), `/auth/logout`, `/me`                               | Feature test auth lulus (Selesai)                                                  |
+| T-121 | MOB   | ✅ Proyek Flutter, struktur Clean Architecture, DI, router, tema dari token                            | `flutter run` menampilkan layar login bertema (Selesai)                            |
+| T-122 | MOB   | ✅ Dio client + interceptor + pemetaan error; layar Login terhubung API                                | Login berhasil ke API lokal & unit test lulus (Selesai)                            |
 | T-131 | DOC   | Sinkronkan laporan analisis sesuai DECISIONS §5; ajukan Q-1, Q-5, Q-7 ke dosen                         | Laporan/PPT sinkron; jawaban dosen dicatat                                         |
 | T-132 | DOC   | Laporan progres minggu 1 + tautan Drive                                                                | Terkirim                                                                           |
 
@@ -44,8 +44,8 @@ Format tugas: `ID` · jalur · deskripsi · **Selesai bila** (kriteria yang dapa
 | T-203 | ML    | ✅ Ablasi minimal (2–3 percobaan) + analisis                                               | Dukungan ablasi (`no-aug`, `dim64`, `cosface`) & generator `analysis.md` siap |
 | T-204 | ML    | ✅ **Ekspor TFLite + uji paritas Keras↔TFLite + golden vectors** (jangan tunda)            | Skrip ekspor `.tflite`, `threshold.json`, golden & paritas ≥0,999 lulus pytest |
 | T-205 | ML    | ✅ Detektor wajah (data negatif dari T-108) + evaluasi                                     | Skrip latih, evaluasi, ekspor `detector.tflite`, & golden lulus pytest (siap run manual) |
-| T-211 | BE    | `FaceMatchService` (cosine), `GeofenceService` (Haversine) + tes unit                      | Tes unit lulus                                                              |
-| T-212 | BE    | `/face/enroll`, `/face/status` (enkripsi, rata-rata, foto privat)                          | Feature test lulus                                                          |
+| T-211 | BE    | ✅ `FaceMatchService` (cosine), `GeofenceService` (Haversine) + tes unit                               | Tes unit lulus & threshold disinkronkan ke `0.2167` (Selesai)               |
+| T-212 | BE    | ✅ `/face/enroll`, `/face/status` (enkripsi, rata-rata, foto privat)                                   | Feature test lulus (Selesai)                                                |
 | T-213 | BE    | ✅ `/attendance/today`, `check-in`, `check-out`, `history` sesuai urutan API §3.3          | Feature test mencakup semua kode error §1 (Selesai)                         |
 | T-221 | MOB   | ✅ Port praproses Dart + `embedding_service` (TFLite) + **tes paritas dengan golden vectors** | Paritas praproses 5 golden samples lulus (`flutter analyze` & `flutter test` bersih; inferensi TFLite siap verifikasi di perangkat Android) |
 | T-222 | MOB   | ✅ Kamera + oval panduan + GPS + izin (kontekstual)                                         | Komponen kamera oval, GPS, & izin kontekstual siap (`flutter analyze` & `flutter test` lulus; siap uji di ponsel asli) |
@@ -73,8 +73,8 @@ Format tugas: `ID` · jalur · deskripsi · **Selesai bila** (kriteria yang dapa
 
 | ID    | Jalur | Tugas                                                                              | Selesai bila                                           |
 | ----- | ----- | ---------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| T-401 | ALL   | **Bekukan fitur** (tidak ada fitur baru). Perbaiki bug                             | Daftar bug kritis kosong                               |
-| T-402 | ALL   | Gladi demo penuh sesuai PRD §8 di perangkat dan jaringan yang akan dipakai         | Skenario 1–8 lolos, atau kegagalan sudah punya rencana |
+| T-401 | ALL   | ✅ **Bekukan fitur** (tidak ada fitur baru). Perbaiki bug                                          | `CACHE_STORE=file` & `X-Device-Id` distabilkan; `php artisan test`, `flutter analyze`, `flutter test`, & `pytest` lulus 100% |
+| T-402 | ALL   | ✅ Gladi demo penuh sesuai PRD §8 di perangkat dan jaringan yang akan dipakai                      | Audit 8 skenario demo & panduan langkah-demi-langkah + mitigasi R-02 disusun di `docs/project-kit/DEMO_CHECKLIST.md` |
 | T-403 | ML    | Finalisasi `analysis.md`: hasil, perbandingan, ablasi, keterbatasan selisih domain | Dokumen final ditinjau                                 |
 | T-404 | DOC   | Laporan AI (konsep, kode, hasil, analisis per tahap §8 ML_SPEC)                    | Final                                                  |
 | T-405 | DOC   | Laporan akhir PM2 / MPPL, sinkron dengan DECISIONS                                 | Final                                                  |

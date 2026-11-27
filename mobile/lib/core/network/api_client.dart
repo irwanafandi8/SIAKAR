@@ -27,6 +27,11 @@ class ApiClient {
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+          final deviceId =
+              await this.secureStorage.read(key: AppConfig.deviceIdKey);
+          if (deviceId != null && deviceId.isNotEmpty) {
+            options.headers['X-Device-Id'] = deviceId;
+          }
           return handler.next(options);
         },
         onError: (DioException error, handler) {
